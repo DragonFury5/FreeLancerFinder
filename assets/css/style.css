@@ -182,6 +182,7 @@ button{font:inherit}
   50%{transform:translateY(-12px)}
 }
 
+.loc-inline{color:var(--ink-soft);font-weight:500}
 /* ---------------- Sections ---------------- */
 .section{padding:84px 0}
 .section-head{text-align:center;max-width:640px;margin:0 auto 46px}

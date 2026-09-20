@@ -27,10 +27,10 @@ if (!$profile) {
     exit;
 }
 
-$pageTitle = $profile['name'] . ' — FLF';
-require __DIR__ . '/includes/header.php';
+$pageTitle  = $profile['name'] . ' — FLF';
+$isLancer   = $profile['role'] === 'lancer' && $profile['title'] !== null;
 
-$isLancer = $profile['role'] === 'lancer' && $profile['title'] !== null;
+require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="container">
@@ -39,11 +39,16 @@ $isLancer = $profile['role'] === 'lancer' && $profile['title'] !== null;
     <span class="avatar avatar-lg"><?= e(initials($profile['name'])) ?></span>
     <div>
       <h1><?= e($profile['name']) ?></h1>
-      <p class="sub"><?= $isLancer ? e($profile['title']) : 'Customer on FLF' ?></p>
-      <div class="meta">
-        <?php if ($isLancer && $profile['location']): ?>
-          <span>📍 <?= e($profile['location']) ?></span>
+
+      <!-- Location right beside the title, plain text -->
+      <p class="sub">
+        <?= $isLancer ? e($profile['title']) : 'Customer on FLF' ?>
+        <?php if ($isLancer && !empty($profile['location'])): ?>
+          &nbsp;·&nbsp;<span class="loc-inline">📍 <?= e($profile['location']) ?></span>
         <?php endif; ?>
+      </p>
+
+      <div class="meta">
         <?php if ($isLancer && $profile['skill']): ?>
           <span>🏷️ <?= e($profile['skill']) ?></span>
         <?php endif; ?>
@@ -56,6 +61,7 @@ $isLancer = $profile['role'] === 'lancer' && $profile['title'] !== null;
   </section>
 
   <div class="profile-grid">
+
     <div class="panel">
       <h2>About</h2>
       <?php if ($isLancer && !empty($profile['bio'])): ?>
@@ -75,18 +81,44 @@ $isLancer = $profile['role'] === 'lancer' && $profile['title'] !== null;
           <div class="kv"><dt>Rating</dt><dd><?= number_format((float)$profile['rating'], 1) ?> / 5</dd></div>
           <div class="kv"><dt>Rate</dt><dd>Rp <?= number_format((float)$profile['rate'], 0, ',', '.') ?></dd></div>
           <div class="kv"><dt>Skill</dt><dd><?= e($profile['skill']) ?></dd></div>
-          <div class="kv"><dt>Location</dt><dd><?= e($profile['location']) ?></dd></div>
+          <div class="kv"><dt>Location</dt><dd><?= e($profile['location'] ?: '—') ?></dd></div>
         <?php else: ?>
           <div class="kv"><dt>Member since</dt><dd><?= date('M j, Y', strtotime($profile['created_at'])) ?></dd></div>
         <?php endif; ?>
       </dl>
-
-      <?php if ($isSelf): ?>
-        <p style="margin-top:20px">
-          <a class="btn btn-outline btn-block" href="browse.php">Browse Lancers</a>
-        </p>
-      <?php endif; ?>
     </aside>
+
+    <?php if ($isLancer && !$isSelf): ?>
+      <!-- Payment panel: only for other people's Lancer profiles -->
+      <aside class="panel" style="grid-column:1 / -1">
+        <h2>Hire this Lancer</h2>
+        <p class="hint" style="margin-bottom:18px">
+          Start a secure sandbox payment via Tripay. The amount is pre-filled with
+          <strong><?= e($profile['name']) ?></strong>'s rate — you can change it before paying.
+        </p>
+
+        <dl style="margin:0 0 18px">
+          <div class="kv"><dt>Amount</dt>   <dd>Rp <?= number_format((float)$profile['rate'], 0, ',', '.') ?></dd></div>
+          <div class="kv"><dt>Location</dt> <dd><?= e($profile['location'] ?: '—') ?></dd></div>
+          <div class="kv"><dt>Skill</dt>    <dd><?= e($profile['skill'] ?: '—') ?></dd></div>
+        </dl>
+
+        <a class="btn btn-primary btn-lg"
+           href="payment/pay.php?lancer_id=<?= (int)$profile['id'] ?>">
+          Pay this Lancer →
+        </a>
+      </aside>
+    <?php endif; ?>
+
+    <?php if ($isSelf): ?>
+      <aside class="panel" style="grid-column:1 / -1">
+        <h2>Quick actions</h2>
+        <p style="margin:0 0 16px">
+          <a class="btn btn-outline" href="browse.php">Browse Lancers</a>
+        </p>
+      </aside>
+    <?php endif; ?>
+
   </div>
 </div>
 
