@@ -8,6 +8,7 @@ $mref = $_GET['merchant_ref'] ?? '-';
   <meta charset="utf-8">
   <title>Payment return — FLF</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/payment.css">
 </head>
 <body>
 <header class="navbar">
@@ -19,18 +20,34 @@ $mref = $_GET['merchant_ref'] ?? '-';
   </div>
 </header>
 
-<div class="container" style="max-width:640px;padding:48px 24px">
-  <h1>Thanks! We're checking your payment.</h1>
-  <p class="auth-sub">You came back from Tripay. The final status is confirmed via webhook / dashboard.</p>
+<div class="container">
+  <div class="pay-shell pay-shell--narrow">
 
-  <dl>
-    <div class="kv"><dt>Reference</dt>    <dd><?= htmlspecialchars($ref) ?></dd></div>
-    <div class="kv"><dt>Merchant Ref</dt><dd><?= htmlspecialchars($mref) ?></dd></div>
-  </dl>
+    <ol class="pay-progress">
+      <li class="is-done">Profile</li>
+      <li class="is-done">Payment</li>
+      <li class="is-active">Done</li>
+    </ol>
 
-  <p style="margin-top:24px">
-    <a class="btn btn-outline" href="../browse.php">Back to Lancers</a>
-  </p>
+    <div class="pay-result pay-result--pending">
+      <div class="pay-result__icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      </div>
+      <h2>Thanks! We're checking your payment.</h2>
+      <p>You came back from Tripay. Final status is confirmed via webhook or dashboard.</p>
+    </div>
+
+    <dl class="pay-summary">
+      <div class="kv"><dt>Reference</dt>    <dd><?= htmlspecialchars($ref) ?></dd></div>
+      <div class="kv"><dt>Merchant ref</dt><dd><?= htmlspecialchars($mref) ?></dd></div>
+    </dl>
+
+    <div class="pay-actions">
+      <a class="btn btn-outline" href="../browse.php">Back to Lancers</a>
+      <a class="btn btn-primary" href="../profile.php">Go to profile</a>
+    </div>
+
+  </div>
 </div>
 </body>
 </html>

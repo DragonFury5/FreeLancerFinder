@@ -49,15 +49,37 @@ $pageTitle = 'Pay ' . $lancer['name'] . ' — FLF';
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="auth-wrap">
-  <div class="auth-card">
-    <h1>Pay this Lancer</h1>
-    <p class="auth-sub">
-      You're about to start a secure sandbox payment for
-      <strong><?= e($lancer['name']) ?></strong>
-      (<?= e($lancer['title'] ?: 'Lancer') ?>).
-    </p>
+<div class="container">
+  <div class="pay-shell pay-shell--narrow">
 
+    <!-- Progress strip -->
+    <ol class="pay-progress">
+      <li class="is-done">Profile</li>
+      <li class="is-active">Payment</li>
+      <li>Done</li>
+    </ol>
+
+    <div class="pay-head">
+      <h1>Pay this Lancer</h1>
+      <p class="sub">
+        Secure sandbox payment for <strong><?= e($lancer['name']) ?></strong>.
+      </p>
+    </div>
+
+    <!-- Amount banner -->
+    <div class="pay-amount">
+      <span class="label">Amount due</span>
+      <span class="value">Rp <?= number_format((float)$lancer['rate'], 0, ',', '.') ?></span>
+      <span class="meta">
+        <?= e($lancer['name']) ?>
+        · <?= e($lancer['title'] ?: 'Lancer') ?>
+        <?php if ($lancer['location']): ?>
+          · <?= e($lancer['location']) ?>
+        <?php endif; ?>
+      </span>
+    </div>
+
+    <!-- Summary -->
     <dl class="pay-summary">
       <div class="kv"><dt>Lancer</dt><dd><?= e($lancer['name']) ?></dd></div>
       <div class="kv"><dt>Skill</dt><dd><?= e($lancer['skill'] ?: '—') ?></dd></div>
@@ -111,14 +133,12 @@ require __DIR__ . '/../includes/header.php';
                value="<?= e($me['email'] ?? 'guest@example.com') ?>" required>
       </div>
 
-      <button class="btn btn-primary btn-block btn-lg" type="submit">
-        Continue to payment →
-      </button>
+      <div class="pay-actions">
+        <a class="btn btn-outline" href="../profile.php?id=<?= (int)$lancer['user_id'] ?>">Cancel</a>
+        <button class="btn btn-primary btn-lg" type="submit">Continue to payment →</button>
+      </div>
     </form>
 
-    <p class="auth-foot">
-      <a href="../profile.php?id=<?= (int)$lancer['user_id'] ?>">← Back to profile</a>
-    </p>
   </div>
 </div>
 

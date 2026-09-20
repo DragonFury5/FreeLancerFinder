@@ -69,7 +69,27 @@ $result = json_decode($response, true);
     <meta charset="utf-8">
     <title>Payment Instructions</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/payment.css">
 </head>
+
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var target = document.querySelector(btn.getAttribute('data-copy'));
+    if (!target) return;
+    var text = target.textContent.trim();
+    navigator.clipboard.writeText(text).then(function () {
+      var original = btn.innerHTML;
+      btn.classList.add('is-copied');
+      btn.innerHTML = '✓ Copied';
+      setTimeout(function () {
+        btn.classList.remove('is-copied');
+        btn.innerHTML = original;
+      }, 1600);
+    });
+  });
+});
+</script>
 <body>
 <header class="navbar">
   <div class="container navbar-inner">
@@ -94,62 +114,110 @@ $result = json_decode($response, true);
     </p>
   <?php endif; ?>
 
-  <?php if (!empty($error)): ?>
-      <div class="alert alert-error">cURL error: <?= htmlspecialchars($error) ?></div>
-  <?php elseif (empty($result['success'])): ?>
-      <div class="alert alert-error">
-          <strong>Failed:</strong>
-          <?= htmlspecialchars($result['message'] ?? $response) ?>
-      </div>
-  <?php else: $d = $result['data']; ?>
+ <?php if (!empty($error)): ?>
 
-      <dl style="margin:24px 0">
-          <div class="kv"><dt>Reference</dt>    <dd><?= htmlspecialchars($d['reference']) ?></dd></div>
-          <div class="kv"><dt>Merchant Ref</dt><dd><?= htmlspecialchars($d['merchant_ref']) ?></dd></div>
-          <div class="kv"><dt>Method</dt>      <dd><?= htmlspecialchars($d['payment_name']) ?></dd></div>
-          <div class="kv"><dt>Amount</dt>      <dd>Rp <?= number_format($d['amount'], 0, ',', '.') ?></dd></div>
-          <div class="kv"><dt>Fee</dt>         <dd>Rp <?= number_format($d['fee_merchant'], 0, ',', '.') ?></dd></div>
-          <div class="kv"><dt>Status</dt>      <dd><?= htmlspecialchars($d['status']) ?></dd></div>
-          <div class="kv"><dt>Expires</dt>     <dd><?= date('d M Y H:i', $d['expired_time']) ?></dd></div>
-      </dl>
+  <div class="pay-result pay-result--error">
+    <div class="pay-result__icon">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <h2>Couldn't reach Tripay</h2>
+    <p><?= htmlspecialchars($error) ?></p>
+  </div>
 
-      <?php if (!empty($d['pay_code'])): ?>
-          <div class="panel" style="margin-bottom:20px">
-              <div class="kv"><dt>Payment code / VA</dt><dd><?= htmlspecialchars($d['pay_code']) ?></dd></div>
-          </div>
+<?php elseif (empty($result['success'])): ?>
+
+  <div class="pay-result pay-result--error">
+    <div class="pay-result__icon">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <h2>Payment failed</h2>
+    <p><?= htmlspecialchars($result['message'] ?? 'Unknown error from Tripay.') ?></p>
+  </div>
+
+<?php else: $d = $result['data']; ?>
+
+  <ol class="pay-progress">
+    <li class="is-done">Profile</li>
+    <li class="is-done">Payment</li>
+    <li class="is-active">Pay now</li>
+  </ol>
+
+  <!-- Amount banner -->
+  <div class="pay-amount">
+    <span class="label">Amount due</span>
+    <span class="value">Rp <?= number_format($d['amount'], 0, ',', '.') ?></span>
+    <span class="meta">
+      <?= htmlspecialchars($d['payment_name']) ?>
+      <?php if ($lancerName !== ''): ?>
+        · <?= htmlspecialchars($lancerName) ?>
       <?php endif; ?>
+    </span>
+  </div>
 
-      <?php if (!empty($d['qr_url'])): ?>
-          <div class="panel" style="margin-bottom:20px">
-              <p><strong>QR Code</strong></p>
-              <p><img src="<?= htmlspecialchars($d['qr_url']) ?>" alt="QR" style="max-width:220px"></p>
-          </div>
-      <?php endif; ?>
+  <!-- Summary -->
+  <dl class="pay-summary">
+    <div class="kv">
+      <dt>Status</dt>
+      <dd><span class="pay-status pay-status--<?= strtolower($d['status']) ?>"><?= htmlspecialchars($d['status']) ?></span></dd>
+    </div>
+    <div class="kv"><dt>Reference</dt>     <dd><?= htmlspecialchars($d['reference']) ?></dd></div>
+    <div class="kv"><dt>Merchant ref</dt>  <dd><?= htmlspecialchars($d['merchant_ref']) ?></dd></div>
+    <div class="kv"><dt>Fee</dt>           <dd>Rp <?= number_format($d['fee_merchant'], 0, ',', '.') ?></dd></div>
+    <div class="kv"><dt>Expires</dt>       <dd><?= date('d M Y H:i', $d['expired_time']) ?></dd></div>
+  </dl>
 
-      <?php if (!empty($d['instructions'])): ?>
-          <div class="panel" style="margin-bottom:20px">
-              <p><strong>Instructions</strong></p>
-              <?php foreach ($d['instructions'] as $grp): ?>
-                  <p><em><?= htmlspecialchars($grp['title']) ?></em></p>
-                  <ol>
-                      <?php foreach ($grp['steps'] as $step): ?>
-                          <li><?= $step ?></li>
-                      <?php endforeach; ?>
-                  </ol>
-              <?php endforeach; ?>
-          </div>
-      <?php endif; ?>
-
-      <?php if (!empty($d['checkout_url'])): ?>
-          <a class="btn btn-primary btn-lg" href="<?= htmlspecialchars($d['checkout_url']) ?>" target="_blank">
-              Open Tripay Checkout
-          </a>
-      <?php endif; ?>
-
-      <p style="margin-top:24px">
-          <a href="../profile.php?id=<?= (int)$lancerId ?>">← Back to profile</a>
-      </p>
+  <?php if (!empty($d['pay_code'])): ?>
+    <div class="pay-code">
+      <span class="label">Payment code / VA</span>
+      <span class="value" id="payCode"><?= htmlspecialchars($d['pay_code']) ?></span>
+      <button type="button" class="copy" data-copy="#payCode">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy code
+      </button>
+    </div>
   <?php endif; ?>
+
+  <?php if (!empty($d['qr_url']) || !empty($d['qr_string'])): ?>
+    <div class="pay-qr">
+      <div class="label">Scan to pay</div>
+      <?php if (!empty($d['qr_url'])): ?>
+        <img src="<?= htmlspecialchars($d['qr_url']) ?>" alt="Payment QR code">
+      <?php endif; ?>
+      <?php if (!empty($d['qr_string'])): ?>
+        <pre><?= htmlspecialchars($d['qr_string']) ?></pre>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (!empty($d['instructions'])): ?>
+    <div class="pay-steps">
+      <div class="label">How to pay</div>
+      <?php foreach ($d['instructions'] as $grp): ?>
+        <div class="pay-steps__group">
+          <h4><?= htmlspecialchars($grp['title']) ?></h4>
+          <ol>
+            <?php foreach ($grp['steps'] as $step): ?>
+              <li><?= $step ?></li>
+            <?php endforeach; ?>
+          </ol>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+
+  <div class="pay-actions">
+    <a class="btn btn-outline" href="../profile.php?id=<?= (int)$lancerId ?>">← Back to profile</a>
+    <?php if (!empty($d['checkout_url'])): ?>
+      <a class="btn btn-primary btn-lg" href="<?= htmlspecialchars($d['checkout_url']) ?>" target="_blank" rel="noopener">
+        Open Tripay Checkout →
+      </a>
+    <?php endif; ?>
+  </div>
+
+<?php endif; ?>
 </div>
 </body>
 </html>

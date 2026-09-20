@@ -1,0 +1,224 @@
+/* =========================================================
+   FLF — Payment pages
+   Layers on top of assets/css/style.css
+   ========================================================= */
+
+/* ---------- Page shell ---------- */
+.pay-shell{
+  max-width:760px;
+  margin-inline:auto;
+  padding:48px 24px 96px;
+}
+.pay-shell--narrow{max-width:520px}
+
+.pay-head{margin-bottom:28px}
+.pay-head h1{margin-bottom:6px}
+.pay-head .sub{color:var(--muted);margin:0}
+
+.pay-back{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.88rem;color:var(--muted);margin-top:10px;
+}
+.pay-back:hover{color:var(--ink);text-decoration:none}
+
+/* ---------- Amount banner ---------- */
+.pay-amount{
+  display:flex;flex-direction:column;gap:4px;
+  padding:26px 28px;margin:0 0 24px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);
+  color:#fff;box-shadow:var(--shadow-md);
+}
+.pay-amount .label{
+  font-size:.78rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;opacity:.85;
+}
+.pay-amount .value{
+  font-size:clamp(1.8rem,4vw,2.4rem);
+  font-weight:800;letter-spacing:-.02em;line-height:1.1;
+}
+.pay-amount .meta{
+  font-size:.85rem;opacity:.9;margin-top:4px;
+}
+
+/* ---------- Summary list ---------- */
+.pay-summary{
+  margin:0 0 24px;padding:20px 22px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);
+}
+.pay-summary .kv{
+  display:flex;justify-content:space-between;gap:16px;
+  padding:10px 0;border-bottom:1px solid var(--line);
+  font-size:.92rem;
+}
+.pay-summary .kv:first-child{padding-top:0}
+.pay-summary .kv:last-child{border-bottom:0;padding-bottom:0}
+.pay-summary dt{color:var(--muted);margin:0}
+.pay-summary dd{
+  margin:0;font-weight:600;text-align:right;
+  word-break:break-word;max-width:60%;
+}
+
+/* ---------- Payment code / VA box ---------- */
+.pay-code{
+  position:relative;
+  padding:22px 24px;margin:0 0 20px;
+  background:#fff;border:2px dashed var(--brand-line);
+  border-radius:var(--radius);text-align:center;
+}
+.pay-code .label{
+  display:block;font-size:.78rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--brand-dark);margin-bottom:10px;
+}
+.pay-code .value{
+  display:block;font-size:1.45rem;font-weight:800;
+  letter-spacing:.06em;color:var(--ink);
+  word-break:break-all;line-height:1.3;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.pay-code .copy{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:12px;padding:6px 14px;
+  border:1px solid var(--line-strong);background:#fff;
+  border-radius:999px;font-size:.82rem;font-weight:600;
+  color:var(--ink-soft);cursor:pointer;
+  transition:background-color .15s,border-color .15s;
+}
+.pay-code .copy:hover{background:var(--surface);border-color:var(--muted)}
+.pay-code .copy.is-copied{background:#F0FDF4;border-color:#BBF7D0;color:var(--success)}
+
+/* ---------- QR block ---------- */
+.pay-qr{
+  padding:22px;margin:0 0 20px;text-align:center;
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);
+}
+.pay-qr .label{
+  font-size:.78rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:14px;
+}
+.pay-qr img{
+  max-width:220px;width:100%;height:auto;
+  margin-inline:auto;border-radius:8px;
+}
+.pay-qr pre{
+  margin:12px 0 0;padding:12px 14px;
+  background:var(--surface-2);border-radius:var(--radius-sm);
+  font-size:.78rem;color:var(--ink-soft);
+  overflow:auto;white-space:pre-wrap;word-break:break-all;
+  text-align:left;
+}
+
+/* ---------- Instructions ---------- */
+.pay-steps{
+  padding:22px 24px;margin:0 0 20px;
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);
+}
+.pay-steps .label{
+  font-size:.78rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:14px;
+}
+.pay-steps__group + .pay-steps__group{
+  margin-top:18px;padding-top:18px;border-top:1px solid var(--line);
+}
+.pay-steps__group h4{
+  font-size:.95rem;font-weight:700;margin:0 0 10px;color:var(--ink);
+}
+.pay-steps__group ol{
+  margin:0;padding-left:20px;color:var(--ink-soft);
+  font-size:.92rem;line-height:1.65;
+}
+.pay-steps__group li{margin-bottom:4px}
+.pay-steps__group li strong{color:var(--ink)}
+
+/* ---------- Status pill ---------- */
+.pay-status{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:999px;
+  font-size:.75rem;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.pay-status::before{
+  content:"";width:7px;height:7px;border-radius:50%;
+  background:currentColor;
+}
+.pay-status--pending  {background:#FEF3C7;color:#92400E}
+.pay-status--paid     {background:#DCFCE7;color:#166534}
+.pay-status--expired  {background:#F3F4F6;color:#4B5563}
+.pay-status--failed   {background:#FEE2E2;color:#991B1B}
+.pay-status--refunded {background:#E0E7FF;color:#3730A3}
+
+/* ---------- Actions row ---------- */
+.pay-actions{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;
+}
+.pay-actions .btn{flex:1 1 auto;min-width:180px}
+
+/* ---------- Result icon (success / error) ---------- */
+.pay-result{
+  text-align:center;padding:36px 24px;
+  background:#fff;border:1px solid var(--line);
+  border-radius:20px;box-shadow:var(--shadow-sm);
+  margin-bottom:24px;
+}
+.pay-result__icon{
+  display:grid;place-items:center;
+  width:72px;height:72px;margin:0 auto 18px;
+  border-radius:50%;
+}
+.pay-result__icon svg{
+  width:34px;height:34px;stroke-width:2.4;
+  fill:none;stroke-linecap:round;stroke-linejoin:round;
+}
+.pay-result--success .pay-result__icon{background:#DCFCE7;color:var(--success)}
+.pay-result--error   .pay-result__icon{background:#FEE2E2;color:var(--danger)}
+.pay-result--pending .pay-result__icon{background:#FEF3C7;color:#92400E}
+.pay-result h2{margin-bottom:6px}
+.pay-result p{color:var(--muted);margin:0;font-size:.95rem}
+
+/* ---------- Progress strip (pay → pay → done) ---------- */
+.pay-progress{
+  display:flex;align-items:center;gap:8px;
+  list-style:none;padding:0;margin:0 0 28px;
+  font-size:.82rem;color:var(--muted);
+}
+.pay-progress li{
+  display:flex;align-items:center;gap:8px;flex:1;
+}
+.pay-progress li::before{
+  content:"";flex:none;
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--line-strong);background:#fff;
+}
+.pay-progress li.is-done::before{
+  background:var(--brand);border-color:var(--brand);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+  background-size:14px 14px;background-position:center;background-repeat:no-repeat;
+}
+.pay-progress li.is-active{
+  color:var(--ink);font-weight:600;
+}
+.pay-progress li.is-active::before{
+  border-color:var(--brand);
+  box-shadow:0 0 0 4px rgba(29,78,216,.15);
+}
+.pay-progress li + li::after{
+  content:"";flex:1;height:2px;background:var(--line);
+  margin-inline:4px;margin-left:0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width:620px){
+  .pay-shell{padding:32px 18px 72px}
+  .pay-amount{padding:22px}
+  .pay-amount .value{font-size:1.6rem}
+  .pay-code .value{font-size:1.15rem}
+  .pay-summary{padding:16px 18px}
+  .pay-summary dd{max-width:55%}
+  .pay-actions .btn{min-width:0;flex:1 1 100%}
+  .pay-progress{font-size:.75rem}
+}
