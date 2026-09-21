@@ -397,3 +397,29 @@ legend{font-size:.95rem;font-weight:700;margin-bottom:12px;padding:0}
   .tile{animation:none}
   *{transition-duration:.01ms !important}
 }
+
+/* ---------- Language toggle ---------- */
+.lang-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 12px 7px 10px;
+  border:1px solid var(--line);background:#fff;border-radius:999px;
+  color:var(--ink-soft);text-decoration:none;
+  font-size:.82rem;font-weight:700;letter-spacing:.04em;
+  transition:background-color .15s,border-color .15s,color .15s;
+  flex:none;
+}
+.lang-btn:hover{
+  background:var(--surface);border-color:var(--line-strong);
+  color:var(--ink);text-decoration:none;
+}
+.lang-btn__globe{
+  width:15px;height:15px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.lang-btn__code{line-height:1}
+
+@media (max-width:620px){
+  .lang-btn{padding:6px 8px}
+  .lang-btn__code{display:none}
+}

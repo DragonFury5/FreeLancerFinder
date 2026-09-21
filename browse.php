@@ -1,8 +1,9 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/lang.php';
 
-$pageTitle = 'Find Lancers — FLF';
+$pageTitle = t('browse.title') . ' — FLF';
 $q = trim($_GET['q'] ?? '');
 
 $sql = "SELECT l.id, l.user_id, l.title, l.skill, l.bio, l.location, l.rate, l.rating, u.name
@@ -26,8 +27,8 @@ require __DIR__ . '/includes/header.php';
 
 <section class="page-head">
   <div class="container">
-    <h1>Find your Lancer</h1>
-    <p>Developers, designers, writers, builders, photographers — whoever you need, they're here.</p>
+    <h1><?= e(t('browse.title')) ?></h1>
+    <p><?= e(t('browse.sub')) ?></p>
 
     <form class="search-form" method="get" action="browse.php" role="search">
       <div class="search-wrap">
@@ -35,24 +36,20 @@ require __DIR__ . '/includes/header.php';
           <circle cx="11" cy="11" r="7"/>
           <line x1="20" y1="20" x2="16.65" y2="16.65"/>
         </svg>
-        <input
-          class="search-input"
-          type="search"
-          name="q"
-          placeholder="Search for Lancers!"
-          value="<?= e($q) ?>"
-          aria-label="Search for Lancers"
-        >
+        <input class="search-input" type="search" name="q"
+               placeholder="<?= e(t('browse.search_ph')) ?>"
+               aria-label="<?= e(t('browse.search_aria')) ?>"
+               value="<?= e($q) ?>">
       </div>
-      <button class="btn btn-primary" type="submit">Search</button>
+      <button class="btn btn-primary" type="submit"><?= e(t('browse.search_btn')) ?></button>
     </form>
 
     <p class="result-meta">
       <?php if ($q !== ''): ?>
-        <?= count($lancers) ?> result<?= count($lancers) === 1 ? '' : 's' ?> for &ldquo;<?= e($q) ?>&rdquo;
-        &middot; <a href="browse.php">clear</a>
+        <?= e(t('browse.results_for', ['count' => count($lancers), 'q' => $q])) ?>
+        &middot; <a href="browse.php"><?= e(t('browse.clear')) ?></a>
       <?php else: ?>
-        Showing all <?= count($lancers) ?> Lancers
+        <?= e(t('browse.showing_all', ['count' => count($lancers)])) ?>
       <?php endif; ?>
     </p>
   </div>
@@ -61,8 +58,10 @@ require __DIR__ . '/includes/header.php';
 <div class="container">
   <?php if (!$lancers): ?>
     <div class="empty">
-      <strong>No Lancers found.</strong>
-      <p>Try a different keyword or <a href="browse.php">browse everyone</a>.</p>
+      <strong><?= e(t('browse.empty_t')) ?></strong>
+      <p><?= str_replace(':link',
+            '<a href="browse.php">' . e(t('browse.everyone')) . '</a>',
+            e(t('browse.empty_s'))) ?></p>
     </div>
   <?php else: ?>
     <div class="lancer-grid">
@@ -82,7 +81,8 @@ require __DIR__ . '/includes/header.php';
             <p class="lancer-bio"><?= e($l['bio']) ?></p>
           <?php endif; ?>
           <div class="lancer-foot">
-            <span class="rate"><?= number_format((float)$l['rating'], 1) ?> <small>rating</small></span>
+            <span class="rate"><?= number_format((float)$l['rating'], 1) ?>
+              <small><?= e(t('browse.rating')) ?></small></span>
             <span class="loc"><?= e($l['location']) ?></span>
           </div>
         </a>

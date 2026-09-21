@@ -222,3 +222,37 @@
   .pay-actions .btn{min-width:0;flex:1 1 100%}
   .pay-progress{font-size:.75rem}
 }
+
+/* ---------- Donation box ---------- */
+.pay-donation{
+  margin:0 0 18px;padding:16px 18px;
+  background:#FFFBEB;border:1px solid #FDE68A;
+  border-radius:var(--radius-sm);
+}
+.pay-donation__toggle{
+  display:flex;align-items:flex-start;gap:10px;
+  cursor:pointer;font-size:.92rem;font-weight:600;color:var(--ink);
+}
+.pay-donation__toggle input[type="checkbox"]{
+  width:18px;height:18px;margin:2px 0 0;flex:none;
+  accent-color:var(--brand);cursor:pointer;
+}
+.pay-donation__toggle small{
+  display:block;font-weight:500;color:var(--muted);
+  font-size:.8rem;margin-top:2px;
+}
+.pay-donation__amount{
+  margin-top:14px;padding-top:14px;
+  border-top:1px dashed #FDE68A;
+}
+.pay-donation__amount[hidden]{display:none}
+
+/* ---------- Total row (amount + donation) ---------- */
+.pay-total{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 18px;margin:0 0 20px;
+  background:var(--surface-2);border-radius:var(--radius-sm);
+  font-size:.95rem;
+}
+.pay-total dt{color:var(--muted);margin:0}
+.pay-total dd{margin:0;font-weight:800;font-size:1.1rem;color:var(--ink)}

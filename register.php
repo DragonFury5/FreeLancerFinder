@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/lang.php';
 
 if (is_logged_in()) {
     header('Location: profile.php');
@@ -20,21 +21,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password  = (string)($_POST['password'] ?? '');
     $password2 = (string)($_POST['password_confirm'] ?? '');
 
-    if ($old['name'] === '')                            $errors['name'] = 'Please enter your name.';
-    if (!filter_var($old['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Please enter a valid email.';
-    if (strlen($password) < 6)                          $errors['password'] = 'Password must be at least 6 characters.';
-    if ($password !== $password2)                       $errors['password_confirm'] = 'Passwords do not match.';
+    if ($old['name'] === '')                              $errors['name'] = t('register.err_name');
+    if (!filter_var($old['email'], FILTER_VALIDATE_EMAIL))$errors['email'] = t('register.err_email');
+    if (strlen($password) < 6)                            $errors['password'] = t('register.err_password');
+    if ($password !== $password2)                         $errors['password_confirm'] = t('register.err_pw_match');
     if (!in_array($old['role'], ['customer', 'lancer'], true)) $old['role'] = 'customer';
 
     if ($old['role'] === 'lancer') {
-        if ($old['title'] === '') $errors['title'] = 'Please add a short title (e.g. "UI Designer").';
-        if ($old['skill'] === '') $errors['skill'] = 'Please add your main skill or category.';
+        if ($old['title'] === '') $errors['title'] = t('register.err_title');
+        if ($old['skill'] === '') $errors['skill'] = t('register.err_skill');
     }
 
     if (!isset($errors['email'])) {
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->execute([$old['email']]);
-        if ($stmt->fetch()) $errors['email'] = 'That email is already registered.';
+        if ($stmt->fetch()) $errors['email'] = t('register.err_email_used');
     }
 
     if (!$errors) {
@@ -64,19 +65,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } catch (Throwable $e) {
             $pdo->rollBack();
-            $errors['general'] = 'Something went wrong. Please try again.';
+            $errors['general'] = t('register.err_general');
         }
     }
 }
 
-$pageTitle = 'Sign up — FLF';
+$pageTitle = t('register.title') . ' — FLF';
 require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="auth-wrap">
   <div class="auth-card">
-    <h1>Create your account</h1>
-    <p class="auth-sub">Join FLF as a customer looking for talent, or as a Lancer offering it.</p>
+    <h1><?= e(t('register.title')) ?></h1>
+    <p class="auth-sub"><?= e(t('register.sub')) ?></p>
 
     <?php if (!empty($errors['general'])): ?>
       <div class="alert alert-error"><?= e($errors['general']) ?></div>
@@ -84,39 +85,39 @@ require __DIR__ . '/includes/header.php';
 
     <form method="post" novalidate>
       <fieldset>
-        <legend>I want to…</legend>
+        <legend><?= e(t('register.role_legend')) ?></legend>
         <div class="role-choice">
           <label class="role-opt">
             <input type="radio" name="role" value="customer" <?= $old['role'] === 'customer' ? 'checked' : '' ?>>
-            <span>Hire a Lancer<small>I'm a customer</small></span>
+            <span><?= e(t('register.role_cust')) ?><small><?= e(t('register.role_cust_s')) ?></small></span>
           </label>
           <label class="role-opt">
             <input type="radio" name="role" value="lancer" <?= $old['role'] === 'lancer' ? 'checked' : '' ?>>
-            <span>Offer my skills<small>I'm a Lancer</small></span>
+            <span><?= e(t('register.role_lanc')) ?><small><?= e(t('register.role_lanc_s')) ?></small></span>
           </label>
         </div>
       </fieldset>
 
       <div class="field">
-        <label for="name">Full name</label>
+        <label for="name"><?= e(t('register.name')) ?></label>
         <input class="input" id="name" name="name" type="text" value="<?= e($old['name']) ?>" required>
         <?php if (!empty($errors['name'])): ?><div class="err"><?= e($errors['name']) ?></div><?php endif; ?>
       </div>
 
       <div class="field">
-        <label for="email">Email</label>
+        <label for="email"><?= e(t('register.email')) ?></label>
         <input class="input" id="email" name="email" type="email" value="<?= e($old['email']) ?>" required>
         <?php if (!empty($errors['email'])): ?><div class="err"><?= e($errors['email']) ?></div><?php endif; ?>
       </div>
 
       <div class="field-row">
         <div class="field">
-          <label for="password">Password</label>
+          <label for="password"><?= e(t('register.password')) ?></label>
           <input class="input" id="password" name="password" type="password" required>
           <?php if (!empty($errors['password'])): ?><div class="err"><?= e($errors['password']) ?></div><?php endif; ?>
         </div>
         <div class="field">
-          <label for="password_confirm">Confirm password</label>
+          <label for="password_confirm"><?= e(t('register.password_c')) ?></label>
           <input class="input" id="password_confirm" name="password_confirm" type="password" required>
           <?php if (!empty($errors['password_confirm'])): ?><div class="err"><?= e($errors['password_confirm']) ?></div><?php endif; ?>
         </div>
@@ -124,29 +125,36 @@ require __DIR__ . '/includes/header.php';
 
       <div id="lancerFields" hidden>
         <div class="field">
-          <label for="title">Title</label>
-          <input class="input" id="title" name="title" type="text" placeholder="e.g. UI Designer" value="<?= e($old['title']) ?>">
+          <label for="title"><?= e(t('register.title_lbl')) ?></label>
+          <input class="input" id="title" name="title" type="text"
+                 placeholder="<?= e(t('register.title_ph')) ?>" value="<?= e($old['title']) ?>">
           <?php if (!empty($errors['title'])): ?><div class="err"><?= e($errors['title']) ?></div><?php endif; ?>
         </div>
         <div class="field">
-          <label for="skill">Main skill / category</label>
-          <input class="input" id="skill" name="skill" type="text" placeholder="e.g. Design" value="<?= e($old['skill']) ?>">
+          <label for="skill"><?= e(t('register.skill')) ?></label>
+          <input class="input" id="skill" name="skill" type="text"
+                 placeholder="<?= e(t('register.skill_ph')) ?>" value="<?= e($old['skill']) ?>">
           <?php if (!empty($errors['skill'])): ?><div class="err"><?= e($errors['skill']) ?></div><?php endif; ?>
         </div>
         <div class="field">
-          <label for="location">Location</label>
-          <input class="input" id="location" name="location" type="text" placeholder="e.g. Jakarta" value="<?= e($old['location']) ?>">
+          <label for="location"><?= e(t('register.location')) ?></label>
+          <input class="input" id="location" name="location" type="text"
+                 placeholder="<?= e(t('register.location_ph')) ?>" value="<?= e($old['location']) ?>">
         </div>
         <div class="field">
-          <label for="bio">Short bio</label>
-          <textarea class="input" id="bio" name="bio" placeholder="Tell customers what you do and who you help."><?= e($old['bio']) ?></textarea>
+          <label for="bio"><?= e(t('register.bio')) ?></label>
+          <textarea class="input" id="bio" name="bio"
+                    placeholder="<?= e(t('register.bio_ph')) ?>"><?= e($old['bio']) ?></textarea>
         </div>
       </div>
 
-      <button class="btn btn-primary btn-block btn-lg" type="submit">Create account</button>
+      <button class="btn btn-primary btn-block btn-lg" type="submit"><?= e(t('register.submit')) ?></button>
     </form>
 
-    <p class="auth-foot">Already have an account? <a href="login.php">Log in</a></p>
+    <p class="auth-foot">
+      <?= e(t('register.have')) ?>
+      <a href="login.php"><?= e(t('register.login_link')) ?></a>
+    </p>
   </div>
 </div>
 

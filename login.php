@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/lang.php';
 
 if (is_logged_in()) {
     header('Location: profile.php');
@@ -14,8 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim($_POST['email'] ?? '');
     $password = (string)($_POST['password'] ?? '');
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Please enter a valid email.';
-    if ($password === '')                           $errors['password'] = 'Please enter your password.';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = t('login.err_email');
+    if ($password === '')                           $errors['password'] = t('login.err_password');
 
     if (!$errors) {
         $stmt = $pdo->prepare("SELECT id, name, email, password_hash, role FROM users WHERE email = ?");
@@ -33,18 +34,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: profile.php');
             exit;
         }
-        $errors['general'] = 'Incorrect email or password.';
+        $errors['general'] = t('login.err_invalid');
     }
 }
 
-$pageTitle = 'Log in — FLF';
+$pageTitle = t('login.title') . ' — FLF';
 require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="auth-wrap">
   <div class="auth-card">
-    <h1>Welcome back</h1>
-    <p class="auth-sub">Log in to your FLF account.</p>
+    <h1><?= e(t('login.title')) ?></h1>
+    <p class="auth-sub"><?= e(t('login.sub')) ?></p>
 
     <?php if (!empty($errors['general'])): ?>
       <div class="alert alert-error"><?= e($errors['general']) ?></div>
@@ -52,21 +53,24 @@ require __DIR__ . '/includes/header.php';
 
     <form method="post" novalidate>
       <div class="field">
-        <label for="email">Email</label>
+        <label for="email"><?= e(t('login.email')) ?></label>
         <input class="input" id="email" name="email" type="email" value="<?= e($email) ?>" required autofocus>
         <?php if (!empty($errors['email'])): ?><div class="err"><?= e($errors['email']) ?></div><?php endif; ?>
       </div>
 
       <div class="field">
-        <label for="password">Password</label>
+        <label for="password"><?= e(t('login.password')) ?></label>
         <input class="input" id="password" name="password" type="password" required>
         <?php if (!empty($errors['password'])): ?><div class="err"><?= e($errors['password']) ?></div><?php endif; ?>
       </div>
 
-      <button class="btn btn-primary btn-block btn-lg" type="submit">Log in</button>
+      <button class="btn btn-primary btn-block btn-lg" type="submit"><?= e(t('login.submit')) ?></button>
     </form>
 
-    <p class="auth-foot">New to FLF? <a href="register.php">Create an account</a></p>
+    <p class="auth-foot">
+      <?= e(t('login.no_account')) ?>
+      <a href="register.php"><?= e(t('login.create')) ?></a>
+    </p>
   </div>
 </div>
 

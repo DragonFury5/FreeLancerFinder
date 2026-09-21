@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/lang.php';
 
 $pageTitle = 'FLF — FreeLanceFinder';
 $testimonials = $pdo->query("SELECT * FROM testimonials ORDER BY created_at DESC")->fetchAll();
@@ -11,17 +12,17 @@ require __DIR__ . '/includes/header.php';
 <section class="hero">
   <div class="container hero-inner">
     <div class="hero-copy">
-      <span class="eyebrow">Any skill · Any freelancer</span>
-      <h1>Find the right <span class="hl">Lancer</span> for whatever you need done.</h1>
-      <p class="lede">FLF — FreeLanceFinder connects you with freelancers across the country: developers, designers, writers, builders, photographers, musicians, and everything in between.</p>
+      <span class="eyebrow"><?= e(t('hero.eyebrow')) ?></span>
+      <h1><?= t('hero.title') ?></h1>
+      <p class="lede"><?= e(t('hero.lede')) ?></p>
       <div class="hero-actions">
-        <a class="btn btn-primary btn-lg" href="browse.php">Browse Lancers</a>
-        <a class="btn btn-outline btn-lg" href="register.php">Join as a Lancer</a>
+        <a class="btn btn-primary btn-lg" href="browse.php"><?= e(t('hero.cta_browse')) ?></a>
+        <a class="btn btn-outline btn-lg" href="register.php"><?= e(t('hero.cta_join')) ?></a>
       </div>
       <ul class="hero-stats">
-        <li><strong>Every</strong><span>category</span></li>
-        <li><strong>Local</strong><span>talent</span></li>
-        <li><strong>Free</strong><span>to join</span></li>
+        <li><strong><?= e(t('hero.stat1_t')) ?></strong><span><?= e(t('hero.stat1_s')) ?></span></li>
+        <li><strong><?= e(t('hero.stat2_t')) ?></strong><span><?= e(t('hero.stat2_s')) ?></span></li>
+        <li><strong><?= e(t('hero.stat3_t')) ?></strong><span><?= e(t('hero.stat3_s')) ?></span></li>
       </ul>
     </div>
 
@@ -39,24 +40,24 @@ require __DIR__ . '/includes/header.php';
 <section class="section">
   <div class="container">
     <div class="section-head">
-      <h2>What people say about FLF</h2>
-      <p>Real words from Lancers and the customers who hired them.</p>
+      <h2><?= e(t('reviews.heading')) ?></h2>
+      <p><?= e(t('reviews.sub')) ?></p>
     </div>
 
     <div class="slider" data-slider>
-      <div class="slider-track" data-track tabindex="0" aria-label="Reviews, scroll horizontally">
-        <?php foreach ($testimonials as $t): ?>
+      <div class="slider-track" data-track tabindex="0" aria-label="Reviews">
+        <?php foreach ($testimonials as $tst): ?>
           <article class="t-card">
-            <p class="t-message">&ldquo;<?= e($t['message']) ?>&rdquo;</p>
+            <p class="t-message">&ldquo;<?= e($tst['message']) ?>&rdquo;</p>
             <footer class="t-foot">
               <div class="t-person">
-                <span class="avatar avatar-sm"><?= e(initials($t['name'])) ?></span>
+                <span class="avatar avatar-sm"><?= e(initials($tst['name'])) ?></span>
                 <span>
-                  <strong><?= e($t['name']) ?></strong>
-                  <small><?= e($t['role']) ?></small>
+                  <strong><?= e($tst['name']) ?></strong>
+                  <small><?= e($tst['role']) ?></small>
                 </span>
               </div>
-              <?= render_stars((float)$t['rating']) ?>
+              <?= render_stars((float)$tst['rating']) ?>
             </footer>
           </article>
         <?php endforeach; ?>
@@ -69,9 +70,9 @@ require __DIR__ . '/includes/header.php';
 <section class="section cta-section">
   <div class="container">
     <div class="cta-card">
-      <h2>Ready to meet them?</h2>
-      <p>Every kind of freelancer is already here. Take a look and find yours.</p>
-      <a class="btn btn-primary btn-lg" href="browse.php">Check them out</a>
+      <h2><?= e(t('cta.heading')) ?></h2>
+      <p><?= e(t('cta.text')) ?></p>
+      <a class="btn btn-primary btn-lg" href="browse.php"><?= e(t('cta.button')) ?></a>
     </div>
   </div>
 </section>

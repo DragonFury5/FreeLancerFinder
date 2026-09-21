@@ -1,7 +1,7 @@
 <?php
+require_once __DIR__ . '/../includes/lang.php';
 require 'config.php';
 
-// --- Fetch available payment channels from sandbox ---
 $curl = curl_init();
 curl_setopt_array($curl, [
     CURLOPT_FRESH_CONNECT  => true,
@@ -25,11 +25,11 @@ if (empty($error)) {
 }
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sandbox test payment — FLF</title>
+    <title>Pembayaran Uji Sandbox — FLF</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/payment.css">
 </head>
@@ -41,12 +41,12 @@ if (empty($error)) {
       <span class="brand-mark">F</span>
       <span class="brand-text">FLF<small>FreeLanceFinder</small></span>
     </a>
-    <nav class="nav-links" aria-label="Main">
-      <a href="../index.php">Home</a>
-      <a href="../browse.php">Find Lancers</a>
+    <nav class="nav-links" aria-label="Utama">
+      <a href="../index.php">Beranda</a>
+      <a href="../browse.php">Cari Lancer</a>
     </nav>
     <div class="nav-actions">
-      <a class="btn btn-ghost" href="../index.php">← Back to site</a>
+      <a class="btn btn-ghost" href="../index.php">← Kembali ke situs</a>
     </div>
   </div>
 </header>
@@ -56,47 +56,47 @@ if (empty($error)) {
     <div class="pay-shell pay-shell--narrow">
 
       <div class="pay-head">
-        <h1>Sandbox test payment</h1>
+        <h1>Pembayaran uji sandbox</h1>
         <p class="sub">
-          Use this page to test Tripay without going through a Lancer profile.
+          Gunakan halaman ini untuk menguji Tripay tanpa melalui profil Lancer.
         </p>
       </div>
 
       <?php if (!empty($error)): ?>
-        <div class="alert alert-error">cURL error: <?= htmlspecialchars($error) ?></div>
+        <div class="alert alert-error">Kesalahan cURL: <?= htmlspecialchars($error) ?></div>
       <?php elseif (empty($channels)): ?>
         <div class="alert alert-error">
-          Could not load payment channels. Check your API key / merchant code.
+          Gagal memuat metode pembayaran. Periksa API key / merchant code Anda.
         </div>
       <?php endif; ?>
 
       <form method="post" action="create.php">
 
         <div class="field">
-          <label for="method">Payment method</label>
+          <label for="method">Metode pembayaran</label>
           <select class="input" id="method" name="method" required>
             <?php foreach ($channels as $ch): ?>
               <option value="<?= htmlspecialchars($ch['code']) ?>">
-                <?= htmlspecialchars($ch['name']) ?><?= $ch['active'] ? '' : ' (inactive)' ?>
+                <?= htmlspecialchars($ch['name']) ?><?= $ch['active'] ? '' : ' (tidak aktif)' ?>
               </option>
             <?php endforeach; ?>
           </select>
         </div>
 
         <div class="field">
-          <label for="amount">Amount (IDR)</label>
+          <label for="amount">Jumlah (IDR)</label>
           <input class="input" id="amount" name="amount" type="number"
                  value="15000" min="1" required>
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label for="name">Customer name</label>
+            <label for="name">Nama pelanggan</label>
             <input class="input" id="name" name="name" type="text"
-                   value="Test User" required>
+                   value="Pelanggan Uji" required>
           </div>
           <div class="field">
-            <label for="phone">Phone</label>
+            <label for="phone">Nomor telepon</label>
             <input class="input" id="phone" name="phone" type="text"
                    value="08123456789">
           </div>
@@ -110,7 +110,7 @@ if (empty($error)) {
 
         <div class="pay-actions">
           <button class="btn btn-primary btn-lg" type="submit">
-            Create sandbox transaction →
+            Buat transaksi sandbox →
           </button>
         </div>
 
@@ -124,8 +124,8 @@ if (empty($error)) {
   <div class="container footer-inner">
     <p>© <?= date('Y') ?> FLF — FreeLanceFinder.</p>
     <p class="footer-links">
-      <a href="../index.php">Home</a>
-      <a href="../browse.php">Find Lancers</a>
+      <a href="../index.php">Beranda</a>
+      <a href="../browse.php">Cari Lancer</a>
     </p>
   </div>
 </footer>
