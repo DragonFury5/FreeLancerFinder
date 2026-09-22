@@ -27,7 +27,11 @@ require __DIR__ . '/includes/header.php';
 
 <section class="page-head">
   <div class="container">
-    <h1><?= e(t('browse.title')) ?></h1>
+    <h1 class="typewriter"
+    data-typewriter
+    data-text="<?= e(t('browse.title')) ?>">
+  <span class="typewriter__text"><?= e(t('browse.title')) ?></span><span class="typewriter__cursor" aria-hidden="true"></span>
+</h1>
     <p><?= e(t('browse.sub')) ?></p>
 
     <form class="search-form" method="get" action="browse.php" role="search">

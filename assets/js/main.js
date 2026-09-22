@@ -90,4 +90,34 @@
     roleRadios.forEach(function (r) { r.addEventListener('change', syncRole); });
     syncRole();
   }
+
+    /* ---------- Typewriter headings ---------- */
+  document.querySelectorAll('[data-typewriter]').forEach(function (el) {
+    var textEl = el.querySelector('.typewriter__text');
+    if (!textEl) return;
+
+    var full = el.getAttribute('data-text') || textEl.textContent || '';
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Respect reduced motion: leave the text as-is, no cursor animation needed.
+    if (reduced || full === '') return;
+
+    // Optional tuning via data attributes:
+    var speed  = parseInt(el.getAttribute('data-speed')  || '55', 10); // ms per char
+    var delay  = parseInt(el.getAttribute('data-delay')  || '250', 10); // ms before start
+
+    // Start empty so we don't see a flash of full text before typing begins.
+    textEl.textContent = '';
+
+    var i = 0;
+    function tick() {
+      if (i >= full.length) return;
+      // Append one character at a time.
+      textEl.textContent += full.charAt(i);
+      i++;
+      setTimeout(tick, speed);
+    }
+
+    setTimeout(tick, delay);
+  });
 })();

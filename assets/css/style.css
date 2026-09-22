@@ -423,3 +423,35 @@ legend{font-size:.95rem;font-weight:700;margin-bottom:12px;padding:0}
   .lang-btn{padding:6px 8px}
   .lang-btn__code{display:none}
 }
+
+/* ---------- Typewriter heading ---------- */
+.typewriter{
+  display:inline-block;
+  min-height:1em; /* prevents layout jump while typing starts empty */
+}
+.typewriter__text{
+  display:inline;
+  white-space:pre-wrap; /* preserves trailing spaces while typing */
+}
+.typewriter__cursor{
+  display:inline-block;
+  width:3px;
+  height:.95em;
+  background:var(--brand);
+  vertical-align:-.1em;
+  margin-left:3px;
+  border-radius:2px;
+  animation:tw-blink .9s step-end infinite;
+}
+
+@keyframes tw-blink{
+  0%,100%{opacity:1}
+  50%    {opacity:0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .typewriter__cursor{
+    animation:none;
+    opacity:0;
+  }
+}
