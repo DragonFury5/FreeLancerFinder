@@ -4,11 +4,8 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/lang.php';
 require __DIR__ . '/config.php';
 
-// --- Ambil data Lancer ---
 $lancerId = (int)($_GET['lancer_id'] ?? 0);
-if ($lancerId <= 0) {
-    exit('Missing lancer_id.');
-}
+if ($lancerId <= 0) exit('Missing lancer_id.');
 
 $stmt = $pdo->prepare(
     "SELECT l.*, u.name, u.email
@@ -18,12 +15,10 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$lancerId]);
 $lancer = $stmt->fetch();
+if (!$lancer) exit('Lancer not found.');
 
-if (!$lancer) {
-    exit('Lancer not found.');
-}
+$lancerRate = (int)$lancer['rate'];
 
-// --- Ambil channel pembayaran ---
 $channels = [];
 $curl = curl_init();
 curl_setopt_array($curl, [
@@ -39,9 +34,7 @@ curl_close($curl);
 
 if (empty($error)) {
     $decoded = json_decode($response, true);
-    if (!empty($decoded['success'])) {
-        $channels = $decoded['data'];
-    }
+    if (!empty($decoded['success'])) $channels = $decoded['data'];
 }
 
 $me = current_user();
@@ -66,21 +59,20 @@ require __DIR__ . '/../includes/header.php';
 
     <div class="pay-amount">
       <span class="label"><?= e(t('pay.amount_due')) ?></span>
-      <span class="value">Rp <?= number_format((float)$lancer['rate'], 0, ',', '.') ?></span>
+      <span class="value">Rp <?= number_format($lancerRate, 0, ',', '.') ?></span>
       <span class="meta">
         <?= e($lancer['name']) ?>
         · <?= e($lancer['title'] ?: 'Lancer') ?>
-        <?php if ($lancer['location']): ?>
-          · <?= e($lancer['location']) ?>
-        <?php endif; ?>
+        <?php if ($lancer['location']): ?> · <?= e($lancer['location']) ?><?php endif; ?>
       </span>
     </div>
 
     <dl class="pay-summary">
-      <div class="kv"><dt><?= e(t('pay.sum_lancer')) ?></dt><dd><?= e($lancer['name']) ?></dd></div>
-      <div class="kv"><dt><?= e(t('pay.sum_skill')) ?></dt><dd><?= e($lancer['skill'] ?: '—') ?></dd></div>
-      <div class="kv"><dt><?= e(t('pay.sum_location')) ?></dt><dd><?= e($lancer['location'] ?: '—') ?></dd></div>
-      <div class="kv"><dt><?= e(t('pay.sum_rate')) ?></dt><dd>Rp <?= number_format((float)$lancer['rate'], 0, ',', '.') ?></dd></div>
+      <div class="kv"><dt><?= e(t('pay.sum_lancer')) ?></dt>   <dd><?= e($lancer['name']) ?></dd></div>
+      <div class="kv"><dt><?= e(t('pay.sum_skill')) ?></dt>    <dd><?= e($lancer['skill'] ?: '—') ?></dd></div>
+      <div class="kv"><dt><?= e(t('pay.sum_location')) ?></dt> <dd><?= e($lancer['location'] ?: '—') ?></dd></div>
+      <div class="kv"><dt><?= e(t('pay.sum_rate')) ?></dt>
+        <dd>Rp <?= number_format($lancerRate, 0, ',', '.') ?></dd></div>
     </dl>
 
     <?php if ($error): ?>
@@ -92,6 +84,7 @@ require __DIR__ . '/../includes/header.php';
     <form method="post" action="create.php" id="payForm">
       <input type="hidden" name="lancer_id"   value="<?= (int)$lancer['user_id'] ?>">
       <input type="hidden" name="lancer_name" value="<?= e($lancer['name']) ?>">
+      <input type="hidden" name="amount"      value="<?= $lancerRate ?>">
 
       <div class="field">
         <label for="method"><?= e(t('pay.method')) ?></label>
@@ -102,13 +95,6 @@ require __DIR__ . '/../includes/header.php';
             </option>
           <?php endforeach; ?>
         </select>
-      </div>
-
-      <div class="field">
-        <label for="amount"><?= e(t('pay.amount_lbl')) ?></label>
-        <input class="input" id="amount" name="amount" type="number"
-               value="<?= (int)$lancer['rate'] ?: 15000 ?>" min="1" required>
-        <p class="hint"><?= e(t('pay.amount_hint')) ?></p>
       </div>
 
       <div class="pay-donation">
@@ -132,7 +118,7 @@ require __DIR__ . '/../includes/header.php';
 
       <dl class="pay-total">
         <dt><?= e(t('pay.total')) ?></dt>
-        <dd id="totalDisplay">Rp <?= number_format((float)$lancer['rate'] ?: 15000, 0, ',', '.') ?></dd>
+        <dd id="totalDisplay">Rp <?= number_format($lancerRate, 0, ',', '.') ?></dd>
       </dl>
 
       <div class="field-row">
@@ -166,19 +152,18 @@ require __DIR__ . '/../includes/header.php';
 
 <script>
 (function () {
-  var toggle    = document.getElementById('donate_toggle');
-  var box       = document.getElementById('donationBox');
-  var donation  = document.getElementById('donation');
-  var amount    = document.getElementById('amount');
-  var totalEl   = document.getElementById('totalDisplay');
-  var locale    = <?= json_encode(current_lang() === 'id' ? 'id-ID' : 'en-US') ?>;
+  var BASE     = <?= (int)$lancerRate ?>;
+  var toggle   = document.getElementById('donate_toggle');
+  var box      = document.getElementById('donationBox');
+  var donation = document.getElementById('donation');
+  var totalEl  = document.getElementById('totalDisplay');
+  var locale   = <?= json_encode(current_lang() === 'id' ? 'id-ID' : 'en-US') ?>;
 
   function rupiah(n) { return 'Rp ' + (n || 0).toLocaleString(locale); }
 
   function recalc() {
-    var base = parseInt(amount.value || '0', 10) || 0;
-    var don  = (toggle.checked) ? (parseInt(donation.value || '0', 10) || 0) : 0;
-    totalEl.textContent = rupiah(base + don);
+    var don = (toggle.checked) ? (parseInt(donation.value || '0', 10) || 0) : 0;
+    totalEl.textContent = rupiah(BASE + don);
   }
 
   toggle.addEventListener('change', function () {
@@ -186,8 +171,6 @@ require __DIR__ . '/../includes/header.php';
     if (toggle.checked) donation.focus();
     recalc();
   });
-
-  amount.addEventListener('input', recalc);
   donation.addEventListener('input', recalc);
   recalc();
 })();

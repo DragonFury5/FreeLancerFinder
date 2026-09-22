@@ -455,3 +455,38 @@ legend{font-size:.95rem;font-weight:700;margin-bottom:12px;padding:0}
     opacity:0;
   }
 }
+
+/* ---------- Profile rate box ---------- */
+.rate-box{
+  margin-top:22px;padding:18px 20px;
+  background:var(--brand-soft);
+  border:1px solid var(--brand-line);
+  border-radius:var(--radius-sm);
+}
+.rate-box__label{
+  display:block;font-size:.72rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;
+  color:var(--brand-dark);margin-bottom:6px;
+}
+.rate-box__value{
+  display:block;font-size:1.55rem;font-weight:800;
+  color:var(--ink);letter-spacing:-.02em;line-height:1.15;
+}
+
+.rate-edit__label{
+  display:block;font-size:.72rem;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;
+  color:var(--brand-dark);margin-bottom:10px;
+}
+.rate-edit__row{
+  display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;
+}
+.rate-edit__prefix{
+  display:flex;align-items:center;padding:0 14px;
+  background:#fff;border:1px solid var(--line-strong);
+  border-radius:var(--radius-sm);
+  font-weight:700;color:var(--ink-soft);font-size:.9rem;
+}
+.rate-edit__input{flex:1;min-width:120px}
+.rate-edit .hint{margin-top:10px}
+.rate-edit .alert{margin-bottom:0}

@@ -192,6 +192,12 @@ $LANG = [
     'pt.submit'          => 'Create sandbox transaction →',
     'pt.back_site'       => '← Back to site',
 
+        'profile.rate_label'  => 'Starting rate',
+    'profile.rate_save'   => 'Save rate',
+    'profile.rate_hint'   => 'This is the price customers will see when they hire you. You can change it any time.',
+    'profile.rate_saved'  => 'Rate updated.',
+    'profile.rate_error'  => "Couldn't save the rate. Please try again.",
+
     // ---- Footer ----
     'footer.copy'        => '© :year FLF — FreeLanceFinder. Built for freelancers everywhere.',
 ],
@@ -384,6 +390,12 @@ $LANG = [
 
     // ---- Footer ----
     'footer.copy'        => '© :year FLF — FreeLanceFinder. Dibuat untuk freelancer di mana pun.',
+
+        'profile.rate_label'  => 'Tarif mulai dari',
+    'profile.rate_save'   => 'Simpan tarif',
+    'profile.rate_hint'   => 'Ini harga yang dilihat pelanggan saat menyewa Anda. Bisa diubah kapan saja.',
+    'profile.rate_saved'  => 'Tarif diperbarui.',
+    'profile.rate_error'  => 'Gagal menyimpan tarif. Silakan coba lagi.',
 ],
 ];
 

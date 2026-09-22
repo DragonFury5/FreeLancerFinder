@@ -1,7 +1,11 @@
 <?php
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/lang.php';
-require 'config.php';
+require __DIR__ . '/config.php';
 
+// --- Fetch payment channels ---
+$channels = [];
 $curl = curl_init();
 curl_setopt_array($curl, [
     CURLOPT_FRESH_CONNECT  => true,
@@ -16,119 +20,73 @@ $response = curl_exec($curl);
 $error    = curl_error($curl);
 curl_close($curl);
 
-$channels = [];
 if (empty($error)) {
     $decoded = json_decode($response, true);
-    if (!empty($decoded['success'])) {
-        $channels = $decoded['data'];
-    }
+    if (!empty($decoded['success'])) $channels = $decoded['data'];
 }
+
+$pageTitle = t('pt.title') . ' — FLF';
+require __DIR__ . '/../includes/header.php';
 ?>
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pembayaran Uji Sandbox — FLF</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/payment.css">
-</head>
-<body>
 
-<header class="navbar">
-  <div class="container navbar-inner">
-    <a class="brand" href="../index.php">
-      <span class="brand-mark">F</span>
-      <span class="brand-text">FLF<small>FreeLanceFinder</small></span>
-    </a>
-    <nav class="nav-links" aria-label="Utama">
-      <a href="../index.php">Beranda</a>
-      <a href="../browse.php">Cari Lancer</a>
-    </nav>
-    <div class="nav-actions">
-      <a class="btn btn-ghost" href="../index.php">← Kembali ke situs</a>
+<div class="container">
+  <div class="pay-shell pay-shell--narrow">
+
+    <div class="pay-head">
+      <h1><?= e(t('pt.title')) ?></h1>
+      <p class="sub"><?= e(t('pt.sub')) ?></p>
     </div>
-  </div>
-</header>
 
-<main>
-  <div class="container">
-    <div class="pay-shell pay-shell--narrow">
+    <?php if (!empty($error)): ?>
+      <div class="alert alert-error"><?= e(t('pay.err_curl', ['msg' => $error])) ?></div>
+    <?php elseif (empty($channels)): ?>
+      <div class="alert alert-error"><?= e(t('pay.err_channels')) ?></div>
+    <?php endif; ?>
 
-      <div class="pay-head">
-        <h1>Pembayaran uji sandbox</h1>
-        <p class="sub">
-          Gunakan halaman ini untuk menguji Tripay tanpa melalui profil Lancer.
-        </p>
+    <form method="post" action="create.php">
+
+      <div class="field">
+        <label for="method"><?= e(t('pt.method')) ?></label>
+        <select class="input" id="method" name="method" required>
+          <?php foreach ($channels as $ch): ?>
+            <option value="<?= e($ch['code']) ?>">
+              <?= e($ch['name']) ?><?= $ch['active'] ? '' : ' ' . e(t('pay.inactive')) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
       </div>
 
-      <?php if (!empty($error)): ?>
-        <div class="alert alert-error">Kesalahan cURL: <?= htmlspecialchars($error) ?></div>
-      <?php elseif (empty($channels)): ?>
-        <div class="alert alert-error">
-          Gagal memuat metode pembayaran. Periksa API key / merchant code Anda.
-        </div>
-      <?php endif; ?>
+      <!-- Amount is only shown on the sandbox test page; the real flow uses the Lancer's rate -->
+      <div class="field">
+        <label for="amount"><?= e(t('pt.amount')) ?></label>
+        <input class="input" id="amount" name="amount" type="number" value="15000" min="1" required>
+      </div>
 
-      <form method="post" action="create.php">
-
+      <div class="field-row">
         <div class="field">
-          <label for="method">Metode pembayaran</label>
-          <select class="input" id="method" name="method" required>
-            <?php foreach ($channels as $ch): ?>
-              <option value="<?= htmlspecialchars($ch['code']) ?>">
-                <?= htmlspecialchars($ch['name']) ?><?= $ch['active'] ? '' : ' (tidak aktif)' ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
+          <label for="name"><?= e(t('pt.cust_name')) ?></label>
+          <input class="input" id="name" name="name" type="text"
+                 value="<?= e(t('pt.cust_default')) ?>" required>
         </div>
-
         <div class="field">
-          <label for="amount">Jumlah (IDR)</label>
-          <input class="input" id="amount" name="amount" type="number"
-                 value="15000" min="1" required>
+          <label for="phone"><?= e(t('pt.phone')) ?></label>
+          <input class="input" id="phone" name="phone" type="text" value="08123456789">
         </div>
+      </div>
 
-        <div class="field-row">
-          <div class="field">
-            <label for="name">Nama pelanggan</label>
-            <input class="input" id="name" name="name" type="text"
-                   value="Pelanggan Uji" required>
-          </div>
-          <div class="field">
-            <label for="phone">Nomor telepon</label>
-            <input class="input" id="phone" name="phone" type="text"
-                   value="08123456789">
-          </div>
-        </div>
+      <div class="field">
+        <label for="email"><?= e(t('pt.email')) ?></label>
+        <input class="input" id="email" name="email" type="email"
+               value="test@example.com" required>
+      </div>
 
-        <div class="field">
-          <label for="email">Email</label>
-          <input class="input" id="email" name="email" type="email"
-                 value="test@example.com" required>
-        </div>
+      <div class="pay-actions">
+        <button class="btn btn-primary btn-lg" type="submit"><?= e(t('pt.submit')) ?></button>
+      </div>
 
-        <div class="pay-actions">
-          <button class="btn btn-primary btn-lg" type="submit">
-            Buat transaksi sandbox →
-          </button>
-        </div>
+    </form>
 
-      </form>
-
-    </div>
   </div>
-</main>
+</div>
 
-<footer class="site-footer">
-  <div class="container footer-inner">
-    <p>© <?= date('Y') ?> FLF — FreeLanceFinder.</p>
-    <p class="footer-links">
-      <a href="../index.php">Beranda</a>
-      <a href="../browse.php">Cari Lancer</a>
-    </p>
-  </div>
-</footer>
-
-</body>
-</html>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

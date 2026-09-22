@@ -1,12 +1,31 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/lang.php';
 
 require_login();
 
 $me = current_user();
 $viewId = isset($_GET['id']) ? (int)$_GET['id'] : (int)$me['id'];
 $isSelf = $viewId === (int)$me['id'];
+
+$errors = [];
+$success = '';
+
+// --- Handle rate update (self + lancer only) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isSelf) {
+    $newRate = (int)($_POST['rate'] ?? 0);
+    if ($newRate < 0)          $newRate = 0;
+    if ($newRate > 100000000)  $newRate = 100000000;
+
+    try {
+        $stmt = $pdo->prepare("UPDATE lancers SET rate = ? WHERE user_id = ?");
+        $stmt->execute([$newRate, (int)$me['id']]);
+        $success = t('profile.rate_saved');
+    } catch (Throwable $e) {
+        $errors['rate'] = t('profile.rate_error');
+    }
+}
 
 $stmt = $pdo->prepare(
     "SELECT u.id, u.name, u.email, u.role, u.created_at,
@@ -20,15 +39,16 @@ $profile = $stmt->fetch();
 
 if (!$profile) {
     http_response_code(404);
-    $pageTitle = 'Not found — FLF';
+    $pageTitle = t('profile.not_found') . ' — FLF';
     require __DIR__ . '/includes/header.php';
-    echo '<div class="container"><div class="empty"><strong>Profile not found.</strong><p><a href="browse.php">Back to Lancers</a></p></div></div>';
+    echo '<div class="container"><div class="empty"><strong>' . e(t('profile.not_found')) . '</strong>'
+       . '<p><a href="browse.php">' . e(t('profile.back')) . '</a></p></div></div>';
     require __DIR__ . '/includes/footer.php';
     exit;
 }
 
-$pageTitle  = $profile['name'] . ' — FLF';
-$isLancer   = $profile['role'] === 'lancer' && $profile['title'] !== null;
+$pageTitle = $profile['name'] . ' — FLF';
+$isLancer  = $profile['role'] === 'lancer' && $profile['title'] !== null;
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -40,9 +60,8 @@ require __DIR__ . '/includes/header.php';
     <div>
       <h1><?= e($profile['name']) ?></h1>
 
-      <!-- Location right beside the title, plain text -->
       <p class="sub">
-        <?= $isLancer ? e($profile['title']) : 'Customer on FLF' ?>
+        <?= $isLancer ? e($profile['title']) : e(t('profile.customer')) ?>
         <?php if ($isLancer && !empty($profile['location'])): ?>
           &nbsp;·&nbsp;<span class="loc-inline">📍 <?= e($profile['location']) ?></span>
         <?php endif; ?>
@@ -52,7 +71,7 @@ require __DIR__ . '/includes/header.php';
         <?php if ($isLancer && $profile['skill']): ?>
           <span>🏷️ <?= e($profile['skill']) ?></span>
         <?php endif; ?>
-        <span>🗓️ Joined <?= date('M Y', strtotime($profile['created_at'])) ?></span>
+        <span>🗓️ <?= e(t('profile.joined')) ?> <?= date('M Y', strtotime($profile['created_at'])) ?></span>
         <?php if ($isSelf): ?>
           <span>✉️ <?= e($profile['email']) ?></span>
         <?php endif; ?>
@@ -63,58 +82,91 @@ require __DIR__ . '/includes/header.php';
   <div class="profile-grid">
 
     <div class="panel">
-      <h2>About</h2>
+      <h2><?= e(t('profile.about')) ?></h2>
       <?php if ($isLancer && !empty($profile['bio'])): ?>
         <p><?= nl2br(e($profile['bio'])) ?></p>
       <?php elseif ($isLancer): ?>
-        <p class="hint">No bio yet.</p>
+        <p class="hint"><?= e(t('profile.no_bio')) ?></p>
       <?php else: ?>
-        <p>This customer hasn't shared public details.</p>
+        <p><?= e(t('profile.customer_no')) ?></p>
+      <?php endif; ?>
+
+      <?php if ($isLancer): ?>
+        <div class="rate-box">
+          <?php if ($isSelf): ?>
+            <form method="post" class="rate-edit">
+              <label for="rate" class="rate-edit__label"><?= e(t('profile.rate_label')) ?></label>
+              <div class="rate-edit__row">
+                <span class="rate-edit__prefix">Rp</span>
+                <input type="number" id="rate" name="rate"
+                       class="input rate-edit__input"
+                       value="<?= (int)$profile['rate'] ?>"
+                       min="0" step="1000" required>
+                <button class="btn btn-primary" type="submit">
+                  <?= e(t('profile.rate_save')) ?>
+                </button>
+              </div>
+              <p class="hint"><?= e(t('profile.rate_hint')) ?></p>
+
+              <?php if ($success): ?>
+                <div class="alert alert-success" style="margin-top:12px"><?= e($success) ?></div>
+              <?php endif; ?>
+              <?php if (!empty($errors['rate'])): ?>
+                <div class="err"><?= e($errors['rate']) ?></div>
+              <?php endif; ?>
+            </form>
+          <?php else: ?>
+            <span class="rate-box__label"><?= e(t('profile.rate_label')) ?></span>
+            <span class="rate-box__value">
+              Rp <?= number_format((float)$profile['rate'], 0, ',', '.') ?>
+            </span>
+          <?php endif; ?>
+        </div>
       <?php endif; ?>
     </div>
 
     <aside class="panel">
-      <h2>Details</h2>
+      <h2><?= e(t('profile.details')) ?></h2>
       <dl style="margin:0">
-        <div class="kv"><dt>Role</dt><dd><?= e(ucfirst($profile['role'])) ?></dd></div>
+        <div class="kv"><dt><?= e(t('profile.role')) ?></dt><dd><?= e(ucfirst($profile['role'])) ?></dd></div>
         <?php if ($isLancer): ?>
-          <div class="kv"><dt>Rating</dt><dd><?= number_format((float)$profile['rating'], 1) ?> / 5</dd></div>
-          <div class="kv"><dt>Rate</dt><dd>Rp <?= number_format((float)$profile['rate'], 0, ',', '.') ?></dd></div>
-          <div class="kv"><dt>Skill</dt><dd><?= e($profile['skill']) ?></dd></div>
-          <div class="kv"><dt>Location</dt><dd><?= e($profile['location'] ?: '—') ?></dd></div>
+          <div class="kv"><dt><?= e(t('profile.rating')) ?></dt><dd><?= number_format((float)$profile['rating'], 1) ?> / 5</dd></div>
+          <div class="kv"><dt><?= e(t('profile.skill')) ?></dt><dd><?= e($profile['skill']) ?></dd></div>
+          <div class="kv"><dt><?= e(t('profile.location')) ?></dt><dd><?= e($profile['location'] ?: '—') ?></dd></div>
         <?php else: ?>
-          <div class="kv"><dt>Member since</dt><dd><?= date('M j, Y', strtotime($profile['created_at'])) ?></dd></div>
+          <div class="kv"><dt><?= e(t('profile.member_since')) ?></dt><dd><?= date('M j, Y', strtotime($profile['created_at'])) ?></dd></div>
         <?php endif; ?>
       </dl>
     </aside>
 
     <?php if ($isLancer && !$isSelf): ?>
-      <!-- Payment panel: only for other people's Lancer profiles -->
       <aside class="panel" style="grid-column:1 / -1">
-        <h2>Hire this Lancer</h2>
+        <h2><?= e(t('profile.hire_h')) ?></h2>
         <p class="hint" style="margin-bottom:18px">
-          Start a secure sandbox payment via Tripay. The amount is pre-filled with
-          <strong><?= e($profile['name']) ?></strong>'s rate — you can change it before paying.
+          <?= e(t('profile.hire_text', ['name' => $profile['name']])) ?>
         </p>
 
         <dl style="margin:0 0 18px">
-          <div class="kv"><dt>Amount</dt>   <dd>Rp <?= number_format((float)$profile['rate'], 0, ',', '.') ?></dd></div>
-          <div class="kv"><dt>Location</dt> <dd><?= e($profile['location'] ?: '—') ?></dd></div>
-          <div class="kv"><dt>Skill</dt>    <dd><?= e($profile['skill'] ?: '—') ?></dd></div>
+          <div class="kv"><dt><?= e(t('profile.hire_amount')) ?></dt>
+            <dd>Rp <?= number_format((float)$profile['rate'], 0, ',', '.') ?></dd></div>
+          <div class="kv"><dt><?= e(t('profile.location')) ?></dt>
+            <dd><?= e($profile['location'] ?: '—') ?></dd></div>
+          <div class="kv"><dt><?= e(t('profile.skill')) ?></dt>
+            <dd><?= e($profile['skill'] ?: '—') ?></dd></div>
         </dl>
 
         <a class="btn btn-primary btn-lg"
            href="payment/pay.php?lancer_id=<?= (int)$profile['id'] ?>">
-          Pay this Lancer →
+          <?= e(t('profile.pay_btn')) ?>
         </a>
       </aside>
     <?php endif; ?>
 
     <?php if ($isSelf): ?>
       <aside class="panel" style="grid-column:1 / -1">
-        <h2>Quick actions</h2>
+        <h2><?= e(t('profile.quick')) ?></h2>
         <p style="margin:0 0 16px">
-          <a class="btn btn-outline" href="browse.php">Browse Lancers</a>
+          <a class="btn btn-outline" href="browse.php"><?= e(t('profile.browse_btn')) ?></a>
         </p>
       </aside>
     <?php endif; ?>

@@ -1,30 +1,41 @@
 <?php
+require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/lang.php';
 require 'config.php';
 
 $method     = $_POST['method']      ?? '';
-$amount     = (int)($_POST['amount'] ?? 0);
-$donation   = 0;
-$name       = $_POST['name']        ?? 'Tamu';
-$email      = $_POST['email']       ?? 'tamu@example.com';
+$name       = $_POST['name']        ?? 'Guest';
+$email      = $_POST['email']       ?? 'guest@example.com';
 $phone      = $_POST['phone']       ?? '08123456789';
 $lancerId   = (int)($_POST['lancer_id'] ?? 0);
 $lancerName = trim($_POST['lancer_name'] ?? '');
+$donation   = 0;
 
-// Donasi hanya dihitung kalau checkbox dicentang
+// --- Amount: always read from the DB (never trust the client) ---
+$amount = 0;
+if ($lancerId > 0) {
+    $stmt = $pdo->prepare("SELECT rate FROM lancers WHERE user_id = ?");
+    $stmt->execute([$lancerId]);
+    $row = $stmt->fetch();
+    if ($row) $amount = (int)$row['rate'];
+}
+
+// Fallback for the sandbox test page (no lancer)
+if ($amount <= 0) {
+    $amount = (int)($_POST['amount'] ?? 0);
+}
+
 if (!empty($_POST['donate_toggle'])) {
     $donation = max(0, (int)($_POST['donation'] ?? 0));
 }
 
 if ($method === '' || $amount <= 0) {
-    die('Input tidak valid.');
+    die('Invalid input.');
 }
 
 $totalAmount = $amount + $donation;
-
 $merchantRef = 'INV-' . time() . '-' . rand(100, 999);
 
-// Signature memakai TOTAL (jumlah + donasi), karena itulah yang ditagih Tripay
 $signature = hash_hmac(
     'sha256',
     TRIPAY_MERCHANT_CODE . $merchantRef . $totalAmount,
