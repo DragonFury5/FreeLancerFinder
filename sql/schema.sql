@@ -12,7 +12,7 @@ CREATE TABLE users (
   name VARCHAR(120) NOT NULL,
   email VARCHAR(190) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role ENUM('customer','lancer') NOT NULL DEFAULT 'customer',
+    role ENUM('customer','lancer','admin') NOT NULL DEFAULT 'customer',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -29,6 +29,25 @@ CREATE TABLE lancers (
   rating DECIMAL(2,1) DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------- transactions (payments) ----------
+CREATE TABLE transactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NULL,
+  lancer_id INT NULL,
+  lancer_name VARCHAR(120) DEFAULT '',
+  merchant_ref VARCHAR(64) NOT NULL UNIQUE,
+  reference VARCHAR(64) DEFAULT '',
+  amount INT NOT NULL DEFAULT 0,
+  donation INT NOT NULL DEFAULT 0,
+  total INT NOT NULL DEFAULT 0,
+  method VARCHAR(60) DEFAULT '',
+  status VARCHAR(32) DEFAULT 'PENDING',
+  checkout_url VARCHAR(255) DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)   REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (lancer_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ---------- testimonials (homepage slider) ----------
@@ -59,6 +78,9 @@ INSERT INTO users (name, email, password_hash, role) VALUES
 ('Fira Ananda',    'fira@example.com',   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'lancer'),
 ('Hendra Kusuma',  'hendra@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'customer');
 
+INSERT INTO users (name, email, password_hash, role) VALUES
+('FLF Admin', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
+-- ... the other 7 rows stay unchanged
 -- ---------- seed lancers (with category) ----------
 INSERT INTO lancers (user_id, title, skill, category, bio, location, rate, rating) VALUES
 (1, 'Brand & UI Designer',   'Design',      'IT',      'I craft clean brand identities and product interfaces for small teams.',   'Jakarta',    350000, 4.9),

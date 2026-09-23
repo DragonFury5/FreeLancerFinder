@@ -5,6 +5,14 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+function require_admin(): void {
+    $u = current_user();
+    if (!$u || ($u['role'] ?? '') !== 'admin') {
+        header('Location: ../login.php');
+        exit;
+    }
+}
+
 function current_user(): ?array {
     return $_SESSION['user'] ?? null;
 }

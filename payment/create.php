@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/auth.php';   // ← was missing — caused the blank page
 require_once __DIR__ . '/../includes/lang.php';
 require 'config.php';
 
@@ -11,6 +12,9 @@ $lancerId   = (int)($_POST['lancer_id'] ?? 0);
 $lancerName = trim($_POST['lancer_name'] ?? '');
 $donation   = 0;
 
+$me   = current_user();
+$meId = $me ? (int)$me['id'] : null;
+
 // --- Amount: always read from the DB (never trust the client) ---
 $amount = 0;
 if ($lancerId > 0) {
@@ -19,16 +23,12 @@ if ($lancerId > 0) {
     $row = $stmt->fetch();
     if ($row) $amount = (int)$row['rate'];
 }
-
-// Fallback for the sandbox test page (no lancer)
 if ($amount <= 0) {
     $amount = (int)($_POST['amount'] ?? 0);
 }
-
 if (!empty($_POST['donate_toggle'])) {
     $donation = max(0, (int)($_POST['donation'] ?? 0));
 }
-
 if ($method === '' || $amount <= 0) {
     die('Invalid input.');
 }
@@ -42,16 +42,12 @@ $signature = hash_hmac(
     TRIPAY_PRIVATE_KEY
 );
 
-// --- Susun order items ---
 $orderItems = [[
     'sku'      => $lancerId > 0 ? 'LANCER-' . $lancerId : 'TEST-01',
-    'name'     => $lancerName !== ''
-                    ? 'Pembayaran untuk ' . $lancerName
-                    : 'Item Uji Sandbox',
+    'name'     => $lancerName !== '' ? 'Pembayaran untuk ' . $lancerName : 'Item Uji Sandbox',
     'price'    => $amount,
     'quantity' => 1,
 ]];
-
 if ($donation > 0) {
     $orderItems[] = [
         'sku'      => 'DONATION-FLF',
@@ -93,13 +89,41 @@ $error    = curl_error($curl);
 curl_close($curl);
 
 $result = json_decode($response, true);
+
+// --- Log the transaction for the admin Payment page ---
+if (!empty($result['success']) && isset($result['data'])) {
+    $d = $result['data'];
+    try {
+        $stmt = $pdo->prepare(
+            "INSERT INTO transactions
+             (user_id, lancer_id, lancer_name, merchant_ref, reference,
+              amount, donation, total, method, status, checkout_url)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->execute([
+            $meId,
+            $lancerId ?: null,
+            $lancerName,
+            $d['merchant_ref'] ?? $merchantRef,
+            $d['reference']    ?? '',
+            $amount,
+            $donation,
+            $totalAmount,
+            $d['payment_name'] ?? $method,
+            $d['status']       ?? 'PENDING',
+            $d['checkout_url'] ?? '',
+        ]);
+    } catch (Throwable $e) {
+        // don't block the page if the log insert fails
+    }
+}
 ?>
 <!doctype html>
 <html lang="<?= e(current_lang()) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instruksi Pembayaran — FLF</title>
+    <title><?= e(t('pi.title')) ?> — FLF</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/payment.css">
 </head>
@@ -111,9 +135,9 @@ $result = json_decode($response, true);
       <span class="brand-mark">F</span>
       <span class="brand-text">FLF<small>FreeLanceFinder</small></span>
     </a>
-    <nav class="nav-links" aria-label="Utama">
-     <a href="../index.php"><?= e(t('nav.home')) ?></a>
-<a href="../browse.php"><?= e(t('nav.browse')) ?></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="../index.php"><?= e(t('nav.home')) ?></a>
+      <a href="../browse.php"><?= e(t('nav.browse')) ?></a>
     </nav>
   </div>
 </header>
@@ -123,12 +147,9 @@ $result = json_decode($response, true);
     <div class="pay-shell">
 
       <div class="pay-head">
-        <h1>Instruksi pembayaran</h1>
+        <h1><?= e(t('pi.title')) ?></h1>
         <?php if ($lancerName !== ''): ?>
-          <p class="sub">
-            Membayar <strong><?= htmlspecialchars($lancerName) ?></strong>
-            — referensi <code><?= htmlspecialchars($merchantRef) ?></code>
-          </p>
+          <p class="sub"><?= e(t('pi.paying', ['name' => $lancerName, 'ref' => $merchantRef])) ?></p>
         <?php endif; ?>
       </div>
 
@@ -138,7 +159,7 @@ $result = json_decode($response, true);
           <div class="pay-result__icon">
             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </div>
-          <h2>Tidak dapat menghubungi Tripay</h2>
+          <h2><?= e(t('pi.err_curl_t')) ?></h2>
           <p><?= htmlspecialchars($error) ?></p>
         </div>
 
@@ -148,68 +169,61 @@ $result = json_decode($response, true);
           <div class="pay-result__icon">
             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </div>
-          <h2>Pembayaran gagal</h2>
-          <p><?= htmlspecialchars($result['message'] ?? 'Kesalahan tidak diketahui dari Tripay.') ?></p>
+          <h2><?= e(t('pi.err_fail_t')) ?></h2>
+          <p><?= htmlspecialchars($result['message'] ?? t('pi.err_unknown')) ?></p>
         </div>
 
       <?php else: $d = $result['data']; ?>
 
         <ol class="pay-progress">
-          <li class="is-done">Profil</li>
-          <li class="is-done">Pembayaran</li>
-          <li class="is-active">Bayar sekarang</li>
+          <li class="is-done"><?= e(t('pay.step_profile')) ?></li>
+          <li class="is-done"><?= e(t('pay.step_payment')) ?></li>
+          <li class="is-active"><?= e(t('pay.step_now')) ?></li>
         </ol>
 
-        <!-- Banner jumlah -->
         <div class="pay-amount">
-          <span class="label">Total tagihan</span>
+          <span class="label"><?= e(t('pay.amount_due')) ?></span>
           <span class="value">Rp <?= number_format($d['amount'], 0, ',', '.') ?></span>
           <span class="meta">
             <?= htmlspecialchars($d['payment_name']) ?>
-            <?php if ($lancerName !== ''): ?>
-              · <?= htmlspecialchars($lancerName) ?>
-            <?php endif; ?>
-            <?php if ($donation > 0): ?>
-              · termasuk donasi Rp <?= number_format($donation, 0, ',', '.') ?>
-            <?php endif; ?>
+            <?php if ($lancerName !== ''): ?> · <?= htmlspecialchars($lancerName) ?><?php endif; ?>
+            <?php if ($donation > 0): ?> · <?= e(t('pi.incl_donation', ['amt' => number_format($donation, 0, ',', '.')])) ?><?php endif; ?>
           </span>
         </div>
 
-        <!-- Ringkasan -->
         <dl class="pay-summary">
-          <div class="kv">
-            <dt>Status</dt>
+          <div class="kv"><dt><?= e(t('pi.sum_status')) ?></dt>
             <dd><span class="pay-status pay-status--<?= strtolower($d['status']) ?>"><?= htmlspecialchars($d['status']) ?></span></dd>
           </div>
-          <div class="kv"><dt>Referensi</dt>           <dd><?= htmlspecialchars($d['reference']) ?></dd></div>
-          <div class="kv"><dt>Referensi merchant</dt>  <dd><?= htmlspecialchars($d['merchant_ref']) ?></dd></div>
-          <div class="kv"><dt>Jumlah</dt>              <dd>Rp <?= number_format($amount, 0, ',', '.') ?></dd></div>
+          <div class="kv"><dt><?= e(t('pi.sum_ref')) ?></dt>     <dd><?= htmlspecialchars($d['reference']) ?></dd></div>
+          <div class="kv"><dt><?= e(t('pi.sum_mref')) ?></dt>    <dd><?= htmlspecialchars($d['merchant_ref']) ?></dd></div>
+          <div class="kv"><dt><?= e(t('pi.sum_amount')) ?></dt>  <dd>Rp <?= number_format($amount, 0, ',', '.') ?></dd></div>
           <?php if ($donation > 0): ?>
-            <div class="kv"><dt>Donasi</dt>            <dd>Rp <?= number_format($donation, 0, ',', '.') ?></dd></div>
+            <div class="kv"><dt><?= e(t('pi.sum_donation')) ?></dt><dd>Rp <?= number_format($donation, 0, ',', '.') ?></dd></div>
           <?php endif; ?>
-          <div class="kv"><dt>Biaya</dt>               <dd>Rp <?= number_format($d['fee_merchant'], 0, ',', '.') ?></dd></div>
-          <div class="kv"><dt>Kedaluwarsa</dt>         <dd><?= date('d M Y H:i', $d['expired_time']) ?></dd></div>
+          <div class="kv"><dt><?= e(t('pi.sum_fee')) ?></dt>     <dd>Rp <?= number_format($d['fee_merchant'], 0, ',', '.') ?></dd></div>
+          <div class="kv"><dt><?= e(t('pi.sum_expires')) ?></dt> <dd><?= date('d M Y H:i', $d['expired_time']) ?></dd></div>
         </dl>
 
         <?php if (!empty($d['pay_code'])): ?>
           <div class="pay-code">
-            <span class="label">Kode pembayaran / VA</span>
+            <span class="label"><?= e(t('pi.code_lbl')) ?></span>
             <span class="value" id="payCode"><?= htmlspecialchars($d['pay_code']) ?></span>
             <button type="button" class="copy" data-copy="#payCode">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2"/>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
               </svg>
-              Salin kode
+              <?= e(t('pi.copy')) ?>
             </button>
           </div>
         <?php endif; ?>
 
         <?php if (!empty($d['qr_url']) || !empty($d['qr_string'])): ?>
           <div class="pay-qr">
-            <div class="label">Pindai untuk membayar</div>
+            <div class="label"><?= e(t('pi.qr_lbl')) ?></div>
             <?php if (!empty($d['qr_url'])): ?>
-              <img src="<?= htmlspecialchars($d['qr_url']) ?>" alt="Kode QR pembayaran">
+              <img src="<?= htmlspecialchars($d['qr_url']) ?>" alt="<?= e(t('pi.qr_alt')) ?>">
             <?php endif; ?>
             <?php if (!empty($d['qr_string'])): ?>
               <pre><?= htmlspecialchars($d['qr_string']) ?></pre>
@@ -219,7 +233,7 @@ $result = json_decode($response, true);
 
         <?php if (!empty($d['instructions'])): ?>
           <div class="pay-steps">
-            <div class="label">Cara membayar</div>
+            <div class="label"><?= e(t('pi.how_lbl')) ?></div>
             <?php foreach ($d['instructions'] as $grp): ?>
               <div class="pay-steps__group">
                 <h4><?= htmlspecialchars($grp['title']) ?></h4>
@@ -234,10 +248,10 @@ $result = json_decode($response, true);
         <?php endif; ?>
 
         <div class="pay-actions">
-          <a class="btn btn-outline" href="../profile.php?id=<?= (int)$lancerId ?>">← Kembali ke profil</a>
+          <a class="btn btn-outline" href="../profile.php?id=<?= (int)$lancerId ?>"><?= e(t('pi.back_profile')) ?></a>
           <?php if (!empty($d['checkout_url'])): ?>
             <a class="btn btn-primary btn-lg" href="<?= htmlspecialchars($d['checkout_url']) ?>" target="_blank" rel="noopener">
-              Buka Checkout Tripay →
+              <?= e(t('pi.open_checkout')) ?>
             </a>
           <?php endif; ?>
         </div>
@@ -256,7 +270,7 @@ document.querySelectorAll('[data-copy]').forEach(function (btn) {
     navigator.clipboard.writeText(target.textContent.trim()).then(function () {
       var original = btn.innerHTML;
       btn.classList.add('is-copied');
-      btn.innerHTML = '✓ Tersalin';
+      btn.innerHTML = <?= json_encode(t('pi.copied')) ?>;
       setTimeout(function () {
         btn.classList.remove('is-copied');
         btn.innerHTML = original;
