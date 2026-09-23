@@ -252,38 +252,80 @@ button{font:inherit}
 
 .result-meta{text-align:center;color:var(--muted);font-size:.9rem;margin-top:18px}
 
+/* ---------------- Lancer cards (dark blue) ---------------- */
 .lancer-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
   gap:20px;padding:36px 0 84px;
 }
+
 .lancer-card{
-  display:flex;flex-direction:column;gap:14px;padding:24px;background:#fff;
-  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);
-  transition:transform .18s,box-shadow .18s,border-color .18s;color:inherit;
+  display:flex;flex-direction:column;gap:14px;padding:24px;
+  background:linear-gradient(160deg, #1E3A8A 0%, #1E40AF 100%);
+  border:1px solid #1E40AF;
+  border-radius:var(--radius);
+  box-shadow:0 10px 24px rgba(30,58,138,.25), 0 3px 8px rgba(30,58,138,.15);
+  color:#FFFFFF;
+  transition:transform .18s, box-shadow .18s, border-color .18s;
 }
 .lancer-card:hover{
-  transform:translateY(-3px);box-shadow:var(--shadow-md);
-  border-color:var(--brand-line);text-decoration:none;
+  transform:translateY(-3px);
+  box-shadow:0 18px 36px rgba(30,58,138,.32), 0 6px 12px rgba(30,58,138,.2);
+  border-color:#BFDBFE;
+  text-decoration:none;
 }
+
+/* Avatar inside dark card */
+.lancer-card .avatar{
+  background:rgba(255,255,255,.15);
+  color:#FFFFFF;
+  border:1px solid rgba(255,255,255,.25);
+}
+
 .lancer-top{display:flex;align-items:center;gap:12px}
-.lancer-name{font-weight:700;font-size:1rem;color:var(--ink);line-height:1.3}
-.lancer-title{font-size:.85rem;color:var(--muted)}
-.badge{
-  align-self:flex-start;padding:4px 11px;border-radius:999px;
-  background:var(--brand-soft);color:var(--brand-dark);
-  font-size:.75rem;font-weight:600;
+
+.lancer-name{
+  font-weight:700;font-size:1rem;color:#FFFFFF;line-height:1.3;
 }
+
+.lancer-title{
+  font-size:.85rem;color:#BFDBFE; /* 6.4:1 — AA */
+}
+
+/* Badge: light pill on dark card */
+.lancer-card .badge{
+  align-self:flex-start;
+  padding:4px 11px;border-radius:999px;
+  background:#DBEAFE;
+  color:#1E3A8A;             /* 7.6:1 — AAA */
+  font-size:.75rem;font-weight:700;
+  border:1px solid #BFDBFE;
+}
+
 .lancer-bio{
-  font-size:.9rem;color:var(--ink-soft);margin:0;
-  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:.9rem;color:#DBEAFE;  /* 7.6:1 — AAA */
+  margin:0;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
+
 .lancer-foot{
-  margin-top:auto;display:flex;align-items:center;justify-content:space-between;
-  gap:12px;padding-top:14px;border-top:1px solid var(--line);font-size:.85rem;
+  margin-top:auto;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding-top:14px;
+  border-top:1px solid rgba(191,219,254,.35);
+  font-size:.85rem;
+  color:#DBEAFE;
 }
-.rate{font-weight:700;color:var(--ink)}
-.rate small{font-weight:500;color:var(--muted);font-size:.78rem}
-.loc{color:var(--muted);font-size:.82rem}
+.lancer-card:focus-visible{
+  outline:3px solid #BFDBFE;
+  outline-offset:3px;
+}
+.rate{font-weight:700;color:#FFFFFF}
+.rate small{font-weight:500;color:#BFDBFE;font-size:.78rem}
+.loc{color:#BFDBFE;font-size:.82rem}
 
 .empty{text-align:center;padding:72px 20px;color:var(--muted)}
 .empty strong{display:block;color:var(--ink);font-size:1.1rem;margin-bottom:6px}
