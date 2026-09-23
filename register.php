@@ -12,6 +12,7 @@ $errors = [];
 $old = [
     'name' => '', 'email' => '', 'role' => 'customer',
     'title' => '', 'skill' => '', 'location' => '', 'bio' => '',
+    'category' => 'Others',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,9 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($password !== $password2)                         $errors['password_confirm'] = t('register.err_pw_match');
     if (!in_array($old['role'], ['customer', 'lancer'], true)) $old['role'] = 'customer';
 
-    if ($old['role'] === 'lancer') {
+
+      if ($old['role'] === 'lancer') {
         if ($old['title'] === '') $errors['title'] = t('register.err_title');
         if ($old['skill'] === '') $errors['skill'] = t('register.err_skill');
+        if (!in_array($old['category'], ['IT', 'Service', 'Others'], true)) {
+            $errors['category'] = t('register.err_category');
+        }
     }
 
     if (!isset($errors['email'])) {
@@ -42,14 +47,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            $hash = password_hash($password, PASSWORD_DEFAULT);
+                        $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)");
             $stmt->execute([$old['name'], $old['email'], $hash, $old['role']]);
             $userId = (int)$pdo->lastInsertId();
 
             if ($old['role'] === 'lancer') {
-                $stmt = $pdo->prepare("INSERT INTO lancers (user_id, title, skill, bio, location) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([$userId, $old['title'], $old['skill'], $old['bio'], $old['location']]);
+                $stmt = $pdo->prepare(
+                    "INSERT INTO lancers (user_id, title, skill, category, bio, location)
+                     VALUES (?, ?, ?, ?, ?, ?)"
+                );
+                $stmt->execute([
+                    $userId,
+                    $old['title'],
+                    $old['skill'],
+                    $old['category'],
+                    $old['bio'],
+                    $old['location'],
+                ]);
             }
 
             $pdo->commit();
@@ -123,30 +138,18 @@ require __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-      <div id="lancerFields" hidden>
         <div class="field">
-          <label for="title"><?= e(t('register.title_lbl')) ?></label>
-          <input class="input" id="title" name="title" type="text"
-                 placeholder="<?= e(t('register.title_ph')) ?>" value="<?= e($old['title']) ?>">
-          <?php if (!empty($errors['title'])): ?><div class="err"><?= e($errors['title']) ?></div><?php endif; ?>
+          <label for="category"><?= e(t('register.category')) ?></label>
+          <select class="input" id="category" name="category">
+            <option value="IT"      <?= $old['category'] === 'IT'      ? 'selected' : '' ?>>IT</option>
+            <option value="Service" <?= $old['category'] === 'Service' ? 'selected' : '' ?>><?= e(t('browse.filter_svc')) ?></option>
+            <option value="Others"  <?= $old['category'] === 'Others'  ? 'selected' : '' ?>><?= e(t('browse.filter_other')) ?></option>
+          </select>
+          <p class="hint"><?= e(t('register.category_hint')) ?></p>
+          <?php if (!empty($errors['category'])): ?>
+            <div class="err"><?= e($errors['category']) ?></div>
+          <?php endif; ?>
         </div>
-        <div class="field">
-          <label for="skill"><?= e(t('register.skill')) ?></label>
-          <input class="input" id="skill" name="skill" type="text"
-                 placeholder="<?= e(t('register.skill_ph')) ?>" value="<?= e($old['skill']) ?>">
-          <?php if (!empty($errors['skill'])): ?><div class="err"><?= e($errors['skill']) ?></div><?php endif; ?>
-        </div>
-        <div class="field">
-          <label for="location"><?= e(t('register.location')) ?></label>
-          <input class="input" id="location" name="location" type="text"
-                 placeholder="<?= e(t('register.location_ph')) ?>" value="<?= e($old['location']) ?>">
-        </div>
-        <div class="field">
-          <label for="bio"><?= e(t('register.bio')) ?></label>
-          <textarea class="input" id="bio" name="bio"
-                    placeholder="<?= e(t('register.bio_ph')) ?>"><?= e($old['bio']) ?></textarea>
-        </div>
-      </div>
 
       <button class="btn btn-primary btn-block btn-lg" type="submit"><?= e(t('register.submit')) ?></button>
     </form>

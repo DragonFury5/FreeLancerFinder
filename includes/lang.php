@@ -56,6 +56,20 @@ $LANG = [
     'browse.everyone'    => 'browse everyone',
     'browse.rating'      => 'rating',
 
+        'browse.filter_label' => 'Sort by',
+    'browse.filter_all'   => 'All categories',
+    'browse.filter_it'    => 'IT',
+    'browse.filter_svc'   => 'Service',
+    'browse.filter_other' => 'Others',
+
+    'register.category'      => 'Category',
+    'register.category_hint' => 'Pick the type of work you do.',
+    'register.err_category'  => 'Please pick a category.',
+
+    'profile.category'      => 'Category',
+    'profile.cat_saved'     => 'Category updated.',
+    'profile.cat_error'     => "Couldn't save the category. Please try again.",
+
     // ---- Login ----
     'login.title'        => 'Welcome back',
     'login.sub'          => 'Log in to your FLF account.',
@@ -251,6 +265,20 @@ $LANG = [
     'browse.empty_s'     => 'Coba kata kunci lain atau :link.',
     'browse.everyone'    => 'jelajahi semua',
     'browse.rating'      => 'peringkat',
+
+        'browse.filter_label' => 'Urutkan berdasarkan',
+    'browse.filter_all'   => 'Semua kategori',
+    'browse.filter_it'    => 'IT',
+    'browse.filter_svc'   => 'Layanan',
+    'browse.filter_other' => 'Lainnya',
+
+    'register.category'      => 'Kategori',
+    'register.category_hint' => 'Pilih jenis pekerjaan Anda.',
+    'register.err_category'  => 'Silakan pilih kategori.',
+
+    'profile.category'      => 'Kategori',
+    'profile.cat_saved'     => 'Kategori diperbarui.',
+    'profile.cat_error'     => 'Gagal menyimpan kategori. Silakan coba lagi.',
 
     // ---- Login ----
     'login.title'        => 'Selamat datang kembali',

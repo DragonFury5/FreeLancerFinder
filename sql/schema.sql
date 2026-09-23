@@ -1,5 +1,5 @@
 -- FLF — FreeLanceFinder schema
--- Import this in phpMyAdmin or via Laragon's terminal:
+-- Import via HeidiSQL / Adminer / terminal:
 --   mysql -u root < sql/schema.sql
 
 DROP DATABASE IF EXISTS flf;
@@ -22,6 +22,7 @@ CREATE TABLE lancers (
   user_id INT NOT NULL UNIQUE,
   title VARCHAR(150) NOT NULL DEFAULT '',
   skill VARCHAR(150) NOT NULL DEFAULT '',
+  category ENUM('IT','Service','Others') NOT NULL DEFAULT 'Others',
   bio TEXT,
   location VARCHAR(120) DEFAULT '',
   rate DECIMAL(10,2) DEFAULT 0,
@@ -58,10 +59,11 @@ INSERT INTO users (name, email, password_hash, role) VALUES
 ('Fira Ananda',    'fira@example.com',   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'lancer'),
 ('Hendra Kusuma',  'hendra@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'customer');
 
-INSERT INTO lancers (user_id, title, skill, bio, location, rate, rating) VALUES
-(1, 'Brand & UI Designer',   'Design',       'I craft clean brand identities and product interfaces for small teams.',   'Jakarta',    350000, 4.9),
-(2, 'Full-stack Developer',  'Code',         'I build fast web apps with PHP, Laravel, and modern JavaScript.',          'Bandung',    500000, 4.8),
-(3, 'Content Writer',        'Writing',      'Long-form articles, SEO copy, and newsletters that actually convert.',     'Yogyakarta', 200000, 4.7),
-(4, 'Photographer',          'Photography',  'Product, event, and portrait photography. Studio or on location.',        'Surabaya',   400000, 5.0),
-(5, 'Handyman',              'Repair',       'Furniture assembly, small repairs, and home installations.',               'Medan',      150000, 4.6),
-(6, 'Music Producer',        'Audio',        'Mixing, mastering, and original composition for film and ads.',            'Bali',       450000, 4.9);
+-- ---------- seed lancers (with category) ----------
+INSERT INTO lancers (user_id, title, skill, category, bio, location, rate, rating) VALUES
+(1, 'Brand & UI Designer',   'Design',      'IT',      'I craft clean brand identities and product interfaces for small teams.',   'Jakarta',    350000, 4.9),
+(2, 'Full-stack Developer',  'Code',        'IT',      'I build fast web apps with PHP, Laravel, and modern JavaScript.',          'Bandung',    500000, 4.8),
+(3, 'Content Writer',        'Writing',     'Others',  'Long-form articles, SEO copy, and newsletters that actually convert.',     'Yogyakarta', 200000, 4.7),
+(4, 'Photographer',          'Photography', 'Service', 'Product, event, and portrait photography. Studio or on location.',        'Surabaya',   400000, 5.0),
+(5, 'Handyman',              'Repair',      'Service', 'Furniture assembly, small repairs, and home installations.',               'Medan',      150000, 4.6),
+(6, 'Music Producer',        'Audio',       'Others',  'Mixing, mastering, and original composition for film and ads.',            'Bali',       450000, 4.9);

@@ -9,18 +9,21 @@ $me = current_user();
 $viewId = isset($_GET['id']) ? (int)$_GET['id'] : (int)$me['id'];
 $isSelf = $viewId === (int)$me['id'];
 
-$errors = [];
+$errors  = [];
 $success = '';
 
-// --- Handle rate update (self + lancer only) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isSelf) {
     $newRate = (int)($_POST['rate'] ?? 0);
-    if ($newRate < 0)          $newRate = 0;
-    if ($newRate > 100000000)  $newRate = 100000000;
+    if ($newRate < 0)         $newRate = 0;
+    if ($newRate > 100000000) $newRate = 100000000;
+
+    $newCat  = $_POST['category'] ?? '';
+    $cats    = ['IT', 'Service', 'Others'];
+    if (!in_array($newCat, $cats, true)) $newCat = 'Others';
 
     try {
-        $stmt = $pdo->prepare("UPDATE lancers SET rate = ? WHERE user_id = ?");
-        $stmt->execute([$newRate, (int)$me['id']]);
+        $stmt = $pdo->prepare("UPDATE lancers SET rate = ?, category = ? WHERE user_id = ?");
+        $stmt->execute([$newRate, $newCat, (int)$me['id']]);
         $success = t('profile.rate_saved');
     } catch (Throwable $e) {
         $errors['rate'] = t('profile.rate_error');
@@ -28,8 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isSelf) {
 }
 
 $stmt = $pdo->prepare(
-    "SELECT u.id, u.name, u.email, u.role, u.created_at,
-            l.title, l.skill, l.bio, l.location, l.rate, l.rating
+        "SELECT u.id, u.name, u.email, u.role, u.created_at,
+            l.title, l.skill, l.bio, l.location, l.rate, l.rating, l.category
      FROM users u
      LEFT JOIN lancers l ON l.user_id = u.id
      WHERE u.id = ?"
@@ -68,12 +71,11 @@ require __DIR__ . '/includes/header.php';
       </p>
 
       <div class="meta">
-        <?php if ($isLancer && $profile['skill']): ?>
+               <?php if ($isLancer && $profile['skill']): ?>
           <span>🏷️ <?= e($profile['skill']) ?></span>
         <?php endif; ?>
-        <span>🗓️ <?= e(t('profile.joined')) ?> <?= date('M Y', strtotime($profile['created_at'])) ?></span>
-        <?php if ($isSelf): ?>
-          <span>✉️ <?= e($profile['email']) ?></span>
+        <?php if ($isLancer && !empty($profile['category'])): ?>
+          <span>📂 <?= e($profile['category']) ?></span>
         <?php endif; ?>
       </div>
     </div>
@@ -92,7 +94,7 @@ require __DIR__ . '/includes/header.php';
       <?php endif; ?>
 
       <?php if ($isLancer): ?>
-        <div class="rate-box">
+              <div class="rate-box">
           <?php if ($isSelf): ?>
             <form method="post" class="rate-edit">
               <label for="rate" class="rate-edit__label"><?= e(t('profile.rate_label')) ?></label>
@@ -102,11 +104,22 @@ require __DIR__ . '/includes/header.php';
                        class="input rate-edit__input"
                        value="<?= (int)$profile['rate'] ?>"
                        min="0" step="1000" required>
-                <button class="btn btn-primary" type="submit">
-                  <?= e(t('profile.rate_save')) ?>
-                </button>
               </div>
+
+              <label for="category" class="rate-edit__label" style="margin-top:18px">
+                <?= e(t('profile.category')) ?>
+              </label>
+              <select class="input" id="category" name="category">
+                <option value="IT"      <?= $profile['category'] === 'IT'      ? 'selected' : '' ?>>IT</option>
+                <option value="Service" <?= $profile['category'] === 'Service' ? 'selected' : '' ?>><?= e(t('browse.filter_svc')) ?></option>
+                <option value="Others"  <?= $profile['category'] === 'Others'  ? 'selected' : '' ?>><?= e(t('browse.filter_other')) ?></option>
+              </select>
+
               <p class="hint"><?= e(t('profile.rate_hint')) ?></p>
+
+              <button class="btn btn-primary" type="submit" style="margin-top:14px">
+                <?= e(t('profile.rate_save')) ?>
+              </button>
 
               <?php if ($success): ?>
                 <div class="alert alert-success" style="margin-top:12px"><?= e($success) ?></div>
@@ -120,6 +133,10 @@ require __DIR__ . '/includes/header.php';
             <span class="rate-box__value">
               Rp <?= number_format((float)$profile['rate'], 0, ',', '.') ?>
             </span>
+            <?php if (!empty($profile['category'])): ?>
+              <span class="rate-box__label" style="margin-top:14px"><?= e(t('profile.category')) ?></span>
+              <span class="rate-box__value" style="font-size:1.05rem"><?= e($profile['category']) ?></span>
+            <?php endif; ?>
           <?php endif; ?>
         </div>
       <?php endif; ?>
