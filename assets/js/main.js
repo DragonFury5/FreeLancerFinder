@@ -120,4 +120,41 @@
 
     setTimeout(tick, delay);
   });
+
+    /* ---------- Accordion ---------- */
+  document.querySelectorAll('[data-accordion]').forEach(function (acc) {
+    var single = acc.getAttribute('data-accordion') === 'single';
+    var items  = acc.querySelectorAll('.accordion__item');
+
+    items.forEach(function (item) {
+      var trigger = item.querySelector('.accordion__trigger');
+      var panel   = item.querySelector('.accordion__panel');
+      if (!trigger || !panel) return;
+
+      // Give each panel a unique id and link it to the trigger
+      if (!panel.id) {
+        panel.id = 'acc-panel-' + Math.random().toString(36).slice(2, 9);
+      }
+      trigger.setAttribute('aria-controls', panel.id);
+
+      trigger.addEventListener('click', function () {
+        var isOpen = trigger.getAttribute('aria-expanded') === 'true';
+
+        // "single" mode = only one open at a time
+        if (single) {
+          items.forEach(function (other) {
+            var t = other.querySelector('.accordion__trigger');
+            var p = other.querySelector('.accordion__panel');
+            if (t && p) {
+              t.setAttribute('aria-expanded', 'false');
+              p.setAttribute('data-open', 'false');
+            }
+          });
+        }
+
+        trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        panel.setAttribute('data-open', isOpen ? 'false' : 'true');
+      });
+    });
+  });
 })();

@@ -231,17 +231,34 @@ if (!empty($result['success']) && isset($result['data'])) {
           </div>
         <?php endif; ?>
 
-        <?php if (!empty($d['instructions'])): ?>
-          <div class="pay-steps">
-            <div class="label"><?= e(t('pi.how_lbl')) ?></div>
-            <?php foreach ($d['instructions'] as $grp): ?>
-              <div class="pay-steps__group">
-                <h4><?= htmlspecialchars($grp['title']) ?></h4>
-                <ol>
-                  <?php foreach ($grp['steps'] as $step): ?>
-                    <li><?= $step ?></li>
-                  <?php endforeach; ?>
-                </ol>
+               <?php if (!empty($d['instructions'])): ?>
+          <div class="accordion" data-accordion="single">
+            <div class="accordion__label"><?= e(t('pi.how_lbl')) ?></div>
+
+            <?php foreach ($d['instructions'] as $i => $grp): ?>
+              <div class="accordion__item">
+                <h3 class="accordion__header">
+                  <button type="button"
+                          class="accordion__trigger"
+                          aria-expanded="<?= $i === 0 ? 'true' : 'false' ?>">
+                    <span><?= htmlspecialchars($grp['title']) ?></span>
+                    <svg class="accordion__icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </button>
+                </h3>
+
+                <div class="accordion__panel" data-open="<?= $i === 0 ? 'true' : 'false' ?>">
+                  <div class="accordion__panel-inner">
+                    <div class="accordion__body">
+                      <ol>
+                        <?php foreach ($grp['steps'] as $step): ?>
+                          <li><?= $step ?></li>
+                        <?php endforeach; ?>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
               </div>
             <?php endforeach; ?>
           </div>
