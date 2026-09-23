@@ -61,15 +61,9 @@ require __DIR__ . '/includes/header.php';
                aria-label="<?= e(t('browse.search_aria')) ?>"
                value="<?= e($q) ?>">
       </div>
-
-      <select class="search-select" name="cat"
-              aria-label="<?= e(t('browse.filter_label')) ?>">
-        <option value=""     <?= $cat === ''        ? 'selected' : '' ?>><?= e(t('browse.filter_all'))   ?></option>
-        <option value="IT"      <?= $cat === 'IT'      ? 'selected' : '' ?>><?= e(t('browse.filter_it'))    ?></option>
-        <option value="Service" <?= $cat === 'Service' ? 'selected' : '' ?>><?= e(t('browse.filter_svc'))   ?></option>
-        <option value="Others"  <?= $cat === 'Others'  ? 'selected' : '' ?>><?= e(t('browse.filter_other')) ?></option>
-      </select>
-
+      <!-- keep the current category when searching -->
+      <input type="hidden" name="cat" value="<?= e($cat) ?>">
+    </form>
       <button class="btn btn-primary" type="submit"><?= e(t('browse.search_btn')) ?></button>
     </form>
 
@@ -90,6 +84,20 @@ require __DIR__ . '/includes/header.php';
 </section>
 
 <div class="container">
+  <div class="filter-bar">
+    <form method="get" action="browse.php" class="filter-pill">
+      <input type="hidden" name="q" value="<?= e($q) ?>">
+      <label for="cat-filter" class="filter-pill__label"><?= e(t('browse.filter_label')) ?></label>
+      <select id="cat-filter" name="cat" class="filter-pill__select"
+              onchange="this.form.submit()">
+        <option value=""        <?= $cat === ''        ? 'selected' : '' ?>><?= e(t('browse.filter_all'))   ?></option>
+        <option value="IT"      <?= $cat === 'IT'      ? 'selected' : '' ?>><?= e(t('browse.filter_it'))    ?></option>
+        <option value="Service" <?= $cat === 'Service' ? 'selected' : '' ?>><?= e(t('browse.filter_svc'))   ?></option>
+        <option value="Others"  <?= $cat === 'Others'  ? 'selected' : '' ?>><?= e(t('browse.filter_other')) ?></option>
+      </select>
+    </form>
+  </div>
+
   <?php if (!$lancers): ?>
     <div class="empty">
       <strong><?= e(t('browse.empty_t')) ?></strong>
