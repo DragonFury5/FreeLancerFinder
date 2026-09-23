@@ -138,6 +138,7 @@ require __DIR__ . '/includes/header.php';
         </div>
       </div>
 
+          <div id="lancerFields" hidden>
         <div class="field">
           <label for="category"><?= e(t('register.category')) ?></label>
           <select class="input" id="category" name="category">
@@ -150,6 +151,33 @@ require __DIR__ . '/includes/header.php';
             <div class="err"><?= e($errors['category']) ?></div>
           <?php endif; ?>
         </div>
+
+        <div class="field">
+          <label for="title"><?= e(t('register.title_lbl')) ?></label>
+          <input class="input" id="title" name="title" type="text"
+                 placeholder="<?= e(t('register.title_ph')) ?>" value="<?= e($old['title']) ?>">
+          <?php if (!empty($errors['title'])): ?><div class="err"><?= e($errors['title']) ?></div><?php endif; ?>
+        </div>
+
+        <div class="field">
+          <label for="skill"><?= e(t('register.skill')) ?></label>
+          <input class="input" id="skill" name="skill" type="text"
+                 placeholder="<?= e(t('register.skill_ph')) ?>" value="<?= e($old['skill']) ?>">
+          <?php if (!empty($errors['skill'])): ?><div class="err"><?= e($errors['skill']) ?></div><?php endif; ?>
+        </div>
+
+        <div class="field">
+          <label for="location"><?= e(t('register.location')) ?></label>
+          <input class="input" id="location" name="location" type="text"
+                 placeholder="<?= e(t('register.location_ph')) ?>" value="<?= e($old['location']) ?>">
+        </div>
+
+        <div class="field">
+          <label for="bio"><?= e(t('register.bio')) ?></label>
+          <textarea class="input" id="bio" name="bio"
+                    placeholder="<?= e(t('register.bio_ph')) ?>"><?= e($old['bio']) ?></textarea>
+        </div>
+      </div>
 
       <button class="btn btn-primary btn-block btn-lg" type="submit"><?= e(t('register.submit')) ?></button>
     </form>
