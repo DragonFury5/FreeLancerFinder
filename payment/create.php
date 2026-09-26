@@ -91,6 +91,7 @@ curl_close($curl);
 $result = json_decode($response, true);
 
 // --- Log the transaction for the admin Payment page ---
+$txId = null;
 if (!empty($result['success']) && isset($result['data'])) {
     $d = $result['data'];
     try {
@@ -113,6 +114,7 @@ if (!empty($result['success']) && isset($result['data'])) {
             $d['status']       ?? 'PENDING',
             $d['checkout_url'] ?? '',
         ]);
+        $txId = (int)$pdo->lastInsertId();
     } catch (Throwable $e) {
         // don't block the page if the log insert fails
     }
@@ -264,21 +266,30 @@ if (!empty($result['success']) && isset($result['data'])) {
           </div>
         <?php endif; ?>
 
-        <div class="pay-actions">
+               <div class="pay-actions">
           <a class="btn btn-outline" href="../profile.php?id=<?= (int)$lancerId ?>"><?= e(t('pi.back_profile')) ?></a>
           <?php if (!empty($d['checkout_url'])): ?>
             <a class="btn btn-primary btn-lg" href="<?= htmlspecialchars($d['checkout_url']) ?>" target="_blank" rel="noopener">
               <?= e(t('pi.open_checkout')) ?>
             </a>
           <?php endif; ?>
-        </div>
 
+          <?php if (!empty($txId)): ?>
+            <a class="btn btn-sandbox btn-lg" href="success.php?tx=<?= $txId ?>"
+               title="Sandbox only — no real payment">
+              <?= e(t('succ.simulate')) ?>
+            </a>
+          <?php endif; ?>
+        </div>
       <?php endif; ?>
+
+      
 
     </div>
   </div>
 </main>
 
+<script src="../assets/js/main.js"></script>
 <script>
 document.querySelectorAll('[data-copy]').forEach(function (btn) {
   btn.addEventListener('click', function () {

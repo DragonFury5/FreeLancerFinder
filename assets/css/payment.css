@@ -256,3 +256,140 @@
 }
 .pay-total dt{color:var(--muted);margin:0}
 .pay-total dd{margin:0;font-weight:800;font-size:1.1rem;color:var(--ink)}
+
+/* ---------- Sandbox simulate button ---------- */
+.btn-sandbox{
+  background:#FEF3C7;
+  color:#92400E;
+  border:1px dashed #F59E0B;
+}
+.btn-sandbox:hover{
+  background:#FDE68A;
+  border-color:#D97706;
+}
+
+/* ---------- Success page ---------- */
+.success-box{
+  padding:48px 32px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:var(--shadow-md);
+  text-align:center;
+}
+
+.success-icon{
+  width:96px;height:96px;
+  border-radius:50%;
+  background:var(--success);
+  display:grid;place-items:center;
+  margin:0 auto 24px;
+  box-shadow:0 12px 28px rgba(21,128,61,.25);
+  animation:success-pop .4s ease-out;
+}
+@keyframes success-pop{
+  0%{transform:scale(.6);opacity:0}
+  60%{transform:scale(1.05);opacity:1}
+  100%{transform:scale(1)}
+}
+.success-icon svg{
+  width:48px;height:48px;
+  stroke:#fff;stroke-width:3;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:30;stroke-dashoffset:30;
+  animation:success-check .45s ease-out .3s forwards;
+}
+@keyframes success-check{to{stroke-dashoffset:0}}
+
+.success-title{font-size:1.8rem;margin-bottom:8px;color:var(--ink)}
+.success-thanks{color:var(--muted);margin:0 0 28px}
+
+.success-details{
+  text-align:left;margin:0 0 28px;
+  padding:20px 22px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+}
+.success-details .kv{
+  display:flex;justify-content:space-between;gap:16px;
+  padding:10px 0;border-bottom:1px solid var(--line);
+  font-size:.92rem;
+}
+.success-details .kv:first-child{padding-top:0}
+.success-details .kv:last-child{border-bottom:0;padding-bottom:0}
+.success-details dt{color:var(--muted);margin:0}
+.success-details dd{margin:0;font-weight:600;text-align:right;word-break:break-word}
+.success-details .kv--total dt,
+.success-details .kv--total dd{font-weight:800;color:var(--ink);font-size:1rem}
+
+/* Rating block */
+.success-rating{
+  padding:24px 22px;margin-bottom:28px;
+  background:var(--brand-soft);
+  border:1px solid var(--brand-line);
+  border-radius:var(--radius);
+  text-align:center;
+}
+.success-rating h3{margin:0 0 6px;font-size:1.05rem}
+.success-rating .hint{margin:0 0 18px}
+
+.rating-stars{
+  display:inline-flex;gap:4px;margin-bottom:14px;
+}
+.rating-star{position:relative;display:block;cursor:pointer}
+.rating-star input{
+  position:absolute;opacity:0;pointer-events:none;
+  width:1px;height:1px;
+}
+.rating-star svg{
+  width:24px;height:24px;
+  fill:#D1D5DB;
+  transition:fill .15s,transform .12s;
+}
+.rating-star:hover svg{transform:scale(1.)}
+
+/* Filled up to the checked star */
+.rating-stars:has(input[value="1"]:checked) .rating-star:nth-child(-n+1) svg,
+.rating-stars:has(input[value="2"]:checked) .rating-star:nth-child(-n+2) svg,
+.rating-stars:has(input[value="3"]:checked) .rating-star:nth-child(-n+3) svg,
+.rating-stars:has(input[value="4"]:checked) .rating-star:nth-child(-n+4) svg,
+.rating-stars:has(input[value="5"]:checked) .rating-star:nth-child(-n+5) svg{
+  fill:var(--star);
+}
+
+/* Hover preview */
+.rating-stars:has(.rating-star:nth-child(1):hover) .rating-star:nth-child(-n+1) svg,
+.rating-stars:has(.rating-star:nth-child(2):hover) .rating-star:nth-child(-n+2) svg,
+.rating-stars:has(.rating-star:nth-child(3):hover) .rating-star:nth-child(-n+3) svg,
+.rating-stars:has(.rating-star:nth-child(4):hover) .rating-star:nth-child(-n+4) svg,
+.rating-stars:has(.rating-star:nth-child(5):hover) .rating-star:nth-child(-n+5) svg{
+  fill:#FBBF24;
+}
+
+/* Already-rated display */
+.success-stars{
+  display:inline-flex;gap:4px;margin-top:8px;
+}
+.success-stars .star{
+  width:22px;height:22px;fill:#D1D5DB;
+}
+.success-stars .star.is-on{fill:var(--star)}
+
+.success-rating__thanks{
+  color:var(--success);font-weight:600;margin:0;
+}
+
+.success-actions{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+}
+.success-actions .btn{min-width:160px}
+
+@media (max-width:620px){
+  .success-box{padding:32px 20px}
+  .success-icon{width:80px;height:80px}
+  .success-icon svg{width:40px;height:40px}
+  .success-title{font-size:1.4rem}
+  .rating-star svg{width:30px;height:30px}
+  .success-actions .btn{min-width:0;flex:1 1 100%}
+}

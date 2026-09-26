@@ -5,23 +5,50 @@ require_once __DIR__ . '/../includes/lang.php';
 
 require_admin();
 
+/** Normalize any Tripay status into one of 3 canonical states. */
+function display_status(string $raw): string {
+    $s = strtoupper(trim($raw));
+    if (in_array($s, ['PAID', 'SUCCESS', 'SETTLED'], true)) return 'PAID';
+    if ($s === 'REFUNDED') return 'REFUNDED';
+    return 'UNPAID'; // PENDING, EXPIRED, FAILED, UNPAID, or anything else
+}
+
 $q = trim($_GET['q'] ?? '');
 
-$sql = "SELECT * FROM transactions";
+$sql    = "SELECT * FROM transactions";
+$where  = [];
 $params = [];
+
 if ($q !== '') {
-    $sql .= " WHERE merchant_ref LIKE ? OR reference LIKE ? OR lancer_name LIKE ?
-                    OR status LIKE ? OR method LIKE ?";
     $like = '%' . $q . '%';
+    $or = [
+        "merchant_ref LIKE ?",
+        "reference LIKE ?",
+        "lancer_name LIKE ?",
+        "method LIKE ?",
+        "status LIKE ?",
+    ];
     $params = [$like, $like, $like, $like, $like];
+
+    // Match the 3 canonical labels too, even though the DB stores raw values
+    $qu = strtoupper($q);
+    if ($qu === 'UNPAID') {
+        $or[] = "UPPER(status) IN ('PENDING','EXPIRED','FAILED','UNPAID')";
+    } elseif ($qu === 'PAID') {
+        $or[] = "UPPER(status) IN ('PAID','SUCCESS','SETTLED')";
+    } elseif ($qu === 'REFUNDED') {
+        $or[] = "UPPER(status) = 'REFUNDED'";
+    }
+
+    $where[] = '(' . implode(' OR ', $or) . ')';
 }
-$sql .= " ORDER BY created_at DESC";
+if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
+$sql .= ' ORDER BY created_at DESC';
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
 
-// Totals across every transaction
 $tot = $pdo->query(
     "SELECT COUNT(*) AS n,
             COALESCE(SUM(amount),0)   AS amount,
@@ -40,7 +67,7 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
 
   <div class="admin-head">
     <h1>Payment</h1>
-    <p>Every transaction created through the Tripay sandbox.</p>
+    <p>Every transaction created through the Tripay sandbox. Click a status to change it.</p>
   </div>
 
   <div class="admin-stats">
@@ -104,6 +131,7 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
         </thead>
         <tbody>
           <?php foreach ($rows as $t): ?>
+            <?php $ds = display_status($t['status'] ?? ''); ?>
             <tr>
               <td class="name"><?= e($t['merchant_ref']) ?></td>
               <td><?= e($t['lancer_name'] ?: '—') ?></td>
@@ -112,9 +140,14 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
               <td class="num"><?= $t['donation'] > 0 ? rp($t['donation']) : '—' ?></td>
               <td class="num"><strong><?= rp($t['total']) ?></strong></td>
               <td>
-                <span class="status-badge status-badge--<?= e(strtolower($t['status'])) ?>">
-                  <?= e($t['status']) ?>
-                </span>
+                <button type="button"
+                        class="status-toggle status-toggle--<?= strtolower($ds) ?>"
+                        data-id="<?= (int)$t['id'] ?>"
+                        data-status="<?= $ds ?>"
+                        aria-label="Change status (currently <?= $ds ?>)"
+                        title="Click to cycle: UNPAID → PAID → REFUNDED">
+                  <?= $ds ?>
+                </button>
               </td>
               <td><?= date('M j, Y H:i', strtotime($t['created_at'])) ?></td>
             </tr>
@@ -125,5 +158,53 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
   <?php endif; ?>
 
 </div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CYCLE = { UNPAID: 'PAID', PAID: 'REFUNDED', REFUNDED: 'UNPAID' };
+
+  document.querySelectorAll('.status-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.classList.contains('is-loading')) return;
+
+      var id   = btn.dataset.id;
+      var cur  = (btn.dataset.status || 'UNPAID').toUpperCase();
+      var next = CYCLE[cur] || 'UNPAID';
+
+      btn.classList.add('is-loading');
+
+      var body = new URLSearchParams({ id: id, status: next });
+
+      fetch('update-status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+        credentials: 'same-origin'
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        btn.classList.remove('is-loading');
+
+        if (!data.ok) {
+          alert('Could not update status: ' + (data.error || 'unknown error'));
+          return;
+        }
+
+        btn.classList.remove('status-toggle--' + cur.toLowerCase());
+        btn.classList.add('status-toggle--' + next.toLowerCase());
+        btn.dataset.status = next;
+        btn.textContent = next;
+        btn.setAttribute('aria-label', 'Change status (currently ' + next + ')');
+      })
+      .catch(function () {
+        btn.classList.remove('is-loading');
+        alert('Network error — status not updated.');
+      });
+    });
+  });
+})();
+</script>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

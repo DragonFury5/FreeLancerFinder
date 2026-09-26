@@ -212,6 +212,20 @@ $LANG = [
     'profile.rate_saved'  => 'Rate updated.',
     'profile.rate_error'  => "Couldn't save the rate. Please try again.",
 
+
+        'succ.title'        => 'Payment successful',
+    'succ.thanks'       => 'Thank you for your payment.',
+    'succ.paid_to'      => 'Paid to',
+    'succ.total'        => 'Total',
+    'succ.rate_title'   => 'Rate this Lancer',
+    'succ.rate_hint'    => 'How was your experience? Your rating helps others.',
+    'succ.rate_submit'  => 'Submit rating',
+    'succ.rate_thanks'  => 'Thanks for rating!',
+    'succ.back_browse'  => 'Back to Lancers',
+    'succ.not_found'    => 'Transaction not found.',
+    'succ.simulate'     => 'Simulate successful payment →',
+    'succ.rate_error'   => 'Could not save your rating. Please try again.',
+
     // ---- Footer ----
     'footer.copy'        => '© :year FLF — FreeLanceFinder. Built for freelancers everywhere.',
 ],
@@ -424,6 +438,19 @@ $LANG = [
     'profile.rate_hint'   => 'Ini harga yang dilihat pelanggan saat menyewa Anda. Bisa diubah kapan saja.',
     'profile.rate_saved'  => 'Tarif diperbarui.',
     'profile.rate_error'  => 'Gagal menyimpan tarif. Silakan coba lagi.',
+
+        'succ.title'        => 'Pembayaran berhasil',
+    'succ.thanks'       => 'Terima kasih atas pembayaran Anda.',
+    'succ.paid_to'      => 'Dibayarkan kepada',
+    'succ.total'        => 'Total',
+    'succ.rate_title'   => 'Beri peringkat Lancer ini',
+    'succ.rate_hint'    => 'Bagaimana pengalaman Anda? Peringkat Anda membantu orang lain.',
+    'succ.rate_submit'  => 'Kirim peringkat',
+    'succ.rate_thanks'  => 'Terima kasih atas penilaiannya!',
+    'succ.back_browse'  => 'Kembali ke daftar Lancer',
+    'succ.not_found'    => 'Transaksi tidak ditemukan.',
+    'succ.simulate'     => 'Simulasikan pembayaran berhasil →',
+    'succ.rate_error'   => 'Gagal menyimpan peringkat. Silakan coba lagi.',
 ],
 ];
 
