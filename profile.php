@@ -17,13 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isSelf) {
     if ($newRate < 0)         $newRate = 0;
     if ($newRate > 100000000) $newRate = 100000000;
 
-    $newCat  = $_POST['category'] ?? '';
-    $cats    = ['IT', 'Service', 'Others'];
-    if (!in_array($newCat, $cats, true)) $newCat = 'Others';
-
     try {
-        $stmt = $pdo->prepare("UPDATE lancers SET rate = ?, category = ? WHERE user_id = ?");
-        $stmt->execute([$newRate, $newCat, (int)$me['id']]);
+        $stmt = $pdo->prepare("UPDATE lancers SET rate = ? WHERE user_id = ?");
+        $stmt->execute([$newRate, (int)$me['id']]);
         $success = t('profile.rate_saved');
     } catch (Throwable $e) {
         $errors['rate'] = t('profile.rate_error');
@@ -95,7 +91,7 @@ require __DIR__ . '/includes/header.php';
 
       <?php if ($isLancer): ?>
               <div class="rate-box">
-          <?php if ($isSelf): ?>
+                 <?php if ($isSelf): ?>
             <form method="post" class="rate-edit">
               <label for="rate" class="rate-edit__label"><?= e(t('profile.rate_label')) ?></label>
               <div class="rate-edit__row">
@@ -104,22 +100,11 @@ require __DIR__ . '/includes/header.php';
                        class="input rate-edit__input"
                        value="<?= (int)$profile['rate'] ?>"
                        min="0" step="1000" required>
+                <button class="btn btn-primary" type="submit">
+                  <?= e(t('profile.rate_save')) ?>
+                </button>
               </div>
-
-              <label for="category" class="rate-edit__label" style="margin-top:18px">
-                <?= e(t('profile.category')) ?>
-              </label>
-              <select class="input" id="category" name="category">
-                <option value="IT"      <?= $profile['category'] === 'IT'      ? 'selected' : '' ?>>IT</option>
-                <option value="Service" <?= $profile['category'] === 'Service' ? 'selected' : '' ?>><?= e(t('browse.filter_svc')) ?></option>
-                <option value="Others"  <?= $profile['category'] === 'Others'  ? 'selected' : '' ?>><?= e(t('browse.filter_other')) ?></option>
-              </select>
-
               <p class="hint"><?= e(t('profile.rate_hint')) ?></p>
-
-              <button class="btn btn-primary" type="submit" style="margin-top:14px">
-                <?= e(t('profile.rate_save')) ?>
-              </button>
 
               <?php if ($success): ?>
                 <div class="alert alert-success" style="margin-top:12px"><?= e($success) ?></div>
@@ -179,7 +164,48 @@ require __DIR__ . '/includes/header.php';
       </aside>
     <?php endif; ?>
 
-    <?php if ($isSelf): ?>
+      <?php if ($isSelf && $isLancer): ?>
+      <?php
+        $earnStmt = $pdo->prepare(
+            "SELECT
+                SUM(CASE WHEN UPPER(status) IN ('PAID','SUCCESS','SETTLED') THEN total ELSE 0 END) AS paid,
+                SUM(CASE WHEN UPPER(status) IN ('PAID','SUCCESS','SETTLED') THEN 0
+                         WHEN UPPER(status) = 'REFUNDED' THEN 0
+                         ELSE total END) AS pending,
+                SUM(CASE WHEN UPPER(status) <> 'REFUNDED' THEN total ELSE 0 END) AS total_all,
+                SUM(CASE WHEN UPPER(status) <> 'REFUNDED'
+                         AND YEAR(created_at) = YEAR(NOW())
+                         AND MONTH(created_at) = MONTH(NOW())
+                         THEN total ELSE 0 END) AS this_month
+             FROM transactions WHERE lancer_id = ?"
+        );
+        $earnStmt->execute([(int)$profile['id']]);
+        $earn = $earnStmt->fetch() ?: [];
+      ?>
+      <aside class="panel" style="grid-column:1 / -1">
+        <h2><?= e(t('earn.card_label')) ?></h2>
+
+        <div class="earn-card">
+          <span class="earn-card__label"><?= e(t('earn.card_total')) ?></span>
+          <span class="earn-card__total">Rp <?= number_format((float)($earn['total_all'] ?? 0), 0, ',', '.') ?></span>
+
+          <div class="earn-card__row">
+            <span>
+              <?= e(t('earn.card_pending')) ?>
+              <strong>Rp <?= number_format((float)($earn['pending'] ?? 0), 0, ',', '.') ?></strong>
+            </span>
+            <span>
+              <?= e(t('earn.card_month')) ?>
+              <strong>Rp <?= number_format((float)($earn['this_month'] ?? 0), 0, ',', '.') ?></strong>
+            </span>
+          </div>
+
+          <a class="btn btn-outline earn-card__cta" href="earnings.php">
+            <?= e(t('earn.card_view')) ?>
+          </a>
+        </div>
+      </aside>
+    <?php elseif ($isSelf): ?>
       <aside class="panel" style="grid-column:1 / -1">
         <h2><?= e(t('profile.quick')) ?></h2>
         <p style="margin:0 0 16px">

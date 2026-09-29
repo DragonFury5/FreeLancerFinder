@@ -225,6 +225,38 @@ $LANG = [
     'succ.not_found'    => 'Transaction not found.',
     'succ.simulate'     => 'Simulate successful payment →',
     'succ.rate_error'   => 'Could not save your rating. Please try again.',
+        'nav.earnings'          => 'Earnings',
+
+    'earn.title'            => 'My earnings',
+    'earn.sub'              => 'Everyone who has paid you through FLF.',
+    'earn.stat_total'       => 'Total (incl. pending)',
+    'earn.stat_paid'        => 'Received',
+    'earn.stat_pending'     => 'Pending',
+    'earn.stat_month'       => 'This month',
+
+    'earn.table_date'       => 'Date',
+    'earn.table_customer'   => 'Customer',
+    'earn.table_amount'     => 'Amount',
+    'earn.table_status'     => 'Status',
+
+    'earn.filter_all'       => 'All',
+    'earn.filter_paid'      => 'Received',
+    'earn.filter_unpaid'    => 'Pending',
+
+    'earn.search_ph'        => 'Search by customer or reference…',
+    'earn.showing_all'      => 'Showing all :count payments',
+    'earn.results_for'      => ':count result(s) for “:q”',
+    'earn.clear'            => 'clear',
+    'earn.empty_t'          => 'No payments yet.',
+    'earn.empty_s'          => 'When someone pays you, it will show up here.',
+    'earn.guest'            => 'Guest',
+    'earn.not_lancer'       => 'Only Lancers have earnings.',
+
+    'earn.card_label'       => 'Earnings',
+    'earn.card_total'       => 'Total earned',
+    'earn.card_pending'     => 'pending',
+    'earn.card_month'       => 'this month',
+    'earn.card_view'        => 'View all payments →',
 
     // ---- Footer ----
     'footer.copy'        => '© :year FLF — FreeLanceFinder. Built for freelancers everywhere.',
@@ -451,6 +483,39 @@ $LANG = [
     'succ.not_found'    => 'Transaksi tidak ditemukan.',
     'succ.simulate'     => 'Simulasikan pembayaran berhasil →',
     'succ.rate_error'   => 'Gagal menyimpan peringkat. Silakan coba lagi.',
+
+        'nav.earnings'          => 'Pendapatan',
+
+    'earn.title'            => 'Pendapatan saya',
+    'earn.sub'              => 'Semua orang yang telah membayar Anda melalui FLF.',
+    'earn.stat_total'       => 'Total (termasuk tertunda)',
+    'earn.stat_paid'        => 'Diterima',
+    'earn.stat_pending'     => 'Tertunda',
+    'earn.stat_month'       => 'Bulan ini',
+
+    'earn.table_date'       => 'Tanggal',
+    'earn.table_customer'   => 'Pelanggan',
+    'earn.table_amount'     => 'Jumlah',
+    'earn.table_status'     => 'Status',
+
+    'earn.filter_all'       => 'Semua',
+    'earn.filter_paid'      => 'Diterima',
+    'earn.filter_unpaid'    => 'Tertunda',
+
+    'earn.search_ph'        => 'Cari berdasarkan pelanggan atau referensi…',
+    'earn.showing_all'      => 'Menampilkan semua :count pembayaran',
+    'earn.results_for'      => ':count hasil untuk “:q”',
+    'earn.clear'            => 'hapus',
+    'earn.empty_t'          => 'Belum ada pembayaran.',
+    'earn.empty_s'          => 'Saat seseorang membayar Anda, akan muncul di sini.',
+    'earn.guest'            => 'Tamu',
+    'earn.not_lancer'       => 'Hanya Lancer yang memiliki pendapatan.',
+
+    'earn.card_label'       => 'Pendapatan',
+    'earn.card_total'       => 'Total pendapatan',
+    'earn.card_pending'     => 'tertunda',
+    'earn.card_month'       => 'bulan ini',
+    'earn.card_view'        => 'Lihat semua pembayaran →',
 ],
 ];
 

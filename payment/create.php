@@ -95,16 +95,17 @@ $txId = null;
 if (!empty($result['success']) && isset($result['data'])) {
     $d = $result['data'];
     try {
-        $stmt = $pdo->prepare(
+               $stmt = $pdo->prepare(
             "INSERT INTO transactions
-             (user_id, lancer_id, lancer_name, merchant_ref, reference,
+             (user_id, lancer_id, lancer_name, customer_name, merchant_ref, reference,
               amount, donation, total, method, status, checkout_url)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([
             $meId,
             $lancerId ?: null,
             $lancerName,
+            $name,                                       // ← customer's name
             $d['merchant_ref'] ?? $merchantRef,
             $d['reference']    ?? '',
             $amount,

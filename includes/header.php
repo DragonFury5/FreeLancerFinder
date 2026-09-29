@@ -50,13 +50,17 @@ $nextLang   = other_lang();
       <span class="brand-text">FLF<small>FreeLanceFinder</small></span>
     </a>
 
-    <nav class="nav-links" aria-label="Main">
+      <nav class="nav-links" aria-label="Main">
       <a href="<?= e($baseUrl) ?>index.php"
          class="<?= $currentPage === 'index.php' ? 'is-active' : '' ?>"><?= e(t('nav.home')) ?></a>
       <a href="<?= e($baseUrl) ?>browse.php"
          class="<?= $currentPage === 'browse.php' ? 'is-active' : '' ?>"><?= e(t('nav.browse')) ?></a>
+      <?php if ($user && ($user['role'] ?? '') === 'lancer'): ?>
+        <a href="<?= e($baseUrl) ?>earnings.php"
+           class="<?= $currentPage === 'earnings.php' ? 'is-active' : '' ?>"><?= e(t('nav.earnings')) ?></a>
+      <?php endif; ?>
     </nav>
-
+    
     <div class="nav-actions">
 
           <button class="theme-btn" type="button"
