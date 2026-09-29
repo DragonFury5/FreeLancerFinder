@@ -63,7 +63,7 @@
 .pay-code{
   position:relative;
   padding:22px 24px;margin:0 0 20px;
-  background:#fff;border:2px dashed var(--brand-line);
+ background:var(--white);border:2px dashed var(--brand-line);
   border-radius:var(--radius);text-align:center;
 }
 .pay-code .label{
@@ -392,4 +392,54 @@
   .success-title{font-size:1.4rem}
   .rating-star svg{width:30px;height:30px}
   .success-actions .btn{min-width:0;flex:1 1 100%}
+}
+
+/* ---------- Dark mode tweaks for payment pages ---------- */
+[data-theme="dark"] .pay-code .copy.is-copied{
+  background:#052E16;
+  border-color:#166534;
+  color:#86EFAC;
+}
+
+[data-theme="dark"] .pay-donation{
+  background:#422006;
+  border-color:#78350F;
+}
+[data-theme="dark"] .pay-donation__toggle small{color:#FCD34D}
+[data-theme="dark"] .pay-donation__amount{border-top-color:#78350F}
+
+[data-theme="dark"] .pay-status--pending  {background:#422006;color:#FCD34D}
+[data-theme="dark"] .pay-status--paid     {background:#052E16;color:#86EFAC}
+[data-theme="dark"] .pay-status--expired  {background:#1E293B;color:#94A3B8}
+[data-theme="dark"] .pay-status--failed   {background:#450A0A;color:#FCA5A5}
+[data-theme="dark"] .pay-status--refunded {background:#1E1B4B;color:#C7D2FE}
+
+[data-theme="dark"] .pay-result--success .pay-result__icon{background:#052E16}
+[data-theme="dark"] .pay-result--error   .pay-result__icon{background:#450A0A}
+[data-theme="dark"] .pay-result--pending .pay-result__icon{background:#422006}
+
+[data-theme="dark"] .alert-error{background:#450A0A;border-color:#7F1D1D;color:#FCA5A5}
+[data-theme="dark"] .alert-success{background:#052E16;border-color:#166534;color:#86EFAC}
+
+/* Success page */
+[data-theme="dark"] .success-icon{background:#15803D;box-shadow:0 12px 28px rgba(21,128,61,.35)}
+[data-theme="dark"] .success-rating{background:#1E3A8A;border-color:#1E40AF}
+[data-theme="dark"] .success-rating .hint{color:#BFDBFE}
+[data-theme="dark"] .success-rating__thanks{color:#86EFAC}
+[data-theme="dark"] .success-stars .star{fill:#334155}
+[data-theme="dark"] .success-stars .star.is-on{fill:#FBBF24}
+
+[data-theme="dark"] .rating-star svg{fill:#334155}
+[data-theme="dark"] .accordion{background:var(--white);border-color:var(--line)}
+[data-theme="dark"] .accordion__label{background:var(--surface);border-bottom-color:var(--line)}
+[data-theme="dark"] .accordion__trigger{background:var(--white);color:var(--ink)}
+[data-theme="dark"] .accordion__trigger:hover,
+[data-theme="dark"] .accordion__trigger[aria-expanded="true"]{background:var(--surface)}
+[data-theme="dark"] .accordion__item + .accordion__item{border-top-color:var(--line)}
+
+[data-theme="dark"] .btn-sandbox{
+  background:#422006;color:#FCD34D;border-color:#78350F;
+}
+[data-theme="dark"] .btn-sandbox:hover{
+  background:#78350F;border-color:#B45309;
 }

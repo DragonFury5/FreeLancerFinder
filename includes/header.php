@@ -23,6 +23,19 @@ $nextLang   = other_lang();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= e($pageTitle) ?></title>
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('flf-theme');
+    if (t !== 'dark' && t !== 'light') {
+      t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+</script>
 <link rel="stylesheet" href="<?= e($baseUrl) ?>assets/css/style.css">
 <?php if ($isPayment): ?>
 <link rel="stylesheet" href="<?= e($baseUrl) ?>assets/css/payment.css">
@@ -45,6 +58,19 @@ $nextLang   = other_lang();
     </nav>
 
     <div class="nav-actions">
+
+          <button class="theme-btn" type="button"
+              data-theme-toggle
+              title="Toggle theme"
+              aria-label="Toggle theme">
+        <svg class="theme-btn__icon theme-btn__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+        <svg class="theme-btn__icon theme-btn__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
 
       <!-- Language toggle -->
       <a class="lang-btn"

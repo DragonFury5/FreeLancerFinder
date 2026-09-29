@@ -19,7 +19,7 @@
   --surface-2:#F3F4F6;
   --white:#FFFFFF;
   --brand:#1D4ED8;
-  --brand-dark:#1E40AF;
+  --brand-dark:#2563EB;
   --brand-soft:#EFF6FF;
   --brand-line:#BFDBFE;
   --star:#B45309;
@@ -32,6 +32,7 @@
   --shadow-lg:0 18px 40px rgba(17,24,39,.10);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --maxw:1140px;
+    --link:#1D4ED8;
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -668,4 +669,194 @@ legend{font-size:.95rem;font-weight:700;margin-bottom:12px;padding:0}
 @media (prefers-reduced-motion:reduce){
   .accordion__panel,
   .accordion__icon{transition:none}
+}
+
+/* =========================================================
+   Dark theme — swaps the values of your existing variables
+   + a few targeted overrides for rules that don't translate
+   ========================================================= */
+
+[data-theme="dark"]{
+  --ink:#F1F5F9;         /* body text — 15.5:1 on #0F172A  ✅ AAA */
+  --ink-soft:#CBD5E1;    /* secondary text — 11.5:1         ✅ AAA */
+  --muted:#94A3B8;       /* muted — 6.5:1                   ✅ AA  */
+  --line:#334155;
+  --line-strong:#475569;
+  --surface:#1E293B;
+  --surface-2:#334155;
+  --white:#0F172A;       /* "white" = page background, becomes dark */
+  --brand:#1D4ED8;       /* button bg — white text = 7:1    ✅ AAA */
+  --brand-dark:#2563EB;  /* button hover */
+  --brand-soft:#1E3A8A;  /* dark blue pill bg */
+  --brand-line:#1E40AF;
+  --star:#FBBF24;
+  --success:#4ADE80;
+  --danger:#F87171;
+  --link:#60A5FA;        /* link text — 7.2:1 on #0F172A    ✅ AAA */
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:0 6px 16px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35);
+  --shadow-lg:0 18px 40px rgba(0,0,0,.55);
+}
+
+/* Links use --link so they can be lighter on dark without changing buttons */
+a{color:var(--link)}
+a:hover{color:var(--link)}
+
+/* Nav active pill — needs light text on the dark blue bg */
+[data-theme="dark"] .nav-links a.is-active{
+  background:var(--brand-soft);
+  color:#BFDBFE;
+}
+
+/* Lancer cards keep their blue gradient, but soften the border/shadow on dark */
+[data-theme="dark"] .lancer-card{
+  border-color:#1E40AF;
+  box-shadow:0 10px 24px rgba(0,0,0,.45), 0 3px 8px rgba(0,0,0,.3);
+}
+[data-theme="dark"] .lancer-card:hover{
+  box-shadow:0 18px 36px rgba(0,0,0,.55), 0 6px 12px rgba(0,0,0,.4);
+}
+
+/* Ratings stars keep the warm amber, glows nicer on dark */
+[data-theme="dark"] .star.is-on{fill:var(--star)}
+
+/* Inputs — ensure placeholder stays readable */
+[data-theme="dark"] .input::placeholder,
+[data-theme="dark"] .search-input::placeholder{color:#64748B}
+
+/* Smooth swap */
+html,body{transition:background-color .2s, color .2s}
+
+/* ---------- Theme toggle button ---------- */
+.theme-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;padding:0;
+  border:1px solid var(--line);background:var(--white);border-radius:999px;
+  color:var(--ink-soft);cursor:pointer;flex:none;
+  transition:background-color .15s, border-color .15s, color .15s;
+}
+.theme-btn:hover{
+  background:var(--surface);border-color:var(--line-strong);color:var(--ink);
+}
+.theme-btn svg{
+  width:17px;height:17px;
+  fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.theme-btn .theme-btn__icon--moon{display:none}
+[data-theme="dark"] .theme-btn .theme-btn__icon--sun{display:none}
+[data-theme="dark"] .theme-btn .theme-btn__icon--moon{display:block}
+
+@media (max-width:620px){
+  .theme-btn{width:32px;height:32px}
+  .theme-btn svg{width:15px;height:15px}
+}
+
+/* =========================================================
+   Dark mode — swap hardcoded whites for the variable
+   ========================================================= */
+
+[data-theme="dark"] .navbar{
+  background:rgba(15,23,42,.9);
+}
+
+[data-theme="dark"] .avatar-btn,
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .tile,
+[data-theme="dark"] .t-card,
+[data-theme="dark"] .search-input,
+[data-theme="dark"] .filter-pill,
+[data-theme="dark"] .auth-card,
+[data-theme="dark"] .input,
+[data-theme="dark"] select.input,
+[data-theme="dark"] textarea.input,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .accordion,
+[data-theme="dark"] .accordion__trigger,
+[data-theme="dark"] .btn-outline,
+[data-theme="dark"] .rate-edit__prefix,
+[data-theme="dark"] .lang-btn{
+  background:var(--surface);
+  border-color:var(--line);
+}
+
+[data-theme="dark"] .accordion__trigger:hover,
+[data-theme="dark"] .accordion__trigger[aria-expanded="true"],
+[data-theme="dark"] .avatar-btn:hover,
+[data-theme="dark"] .btn-outline:hover,
+[data-theme="dark"] .lang-btn:hover{
+  background:var(--surface-2);
+}
+
+/* Cards that fade into page — change the second gradient stop */
+[data-theme="dark"] .cta-card{
+  background:linear-gradient(180deg, var(--brand-soft), var(--white));
+}
+[data-theme="dark"] .profile-hero{
+  background:linear-gradient(180deg, var(--brand-soft), var(--white));
+}
+
+/* Hero section backdrop */
+[data-theme="dark"] .hero{
+  background:
+    radial-gradient(1000px 480px at 88% -10%, var(--brand-soft), transparent 70%),
+    linear-gradient(180deg, var(--white), var(--surface));
+}
+
+/* Footer */
+[data-theme="dark"] .site-footer{
+  background:var(--surface);
+  border-top-color:var(--line);
+}
+
+/* The floating tiles need a soft blue tint so they don't look flat */
+[data-theme="dark"] .tile{
+  background:#1E293B;
+  border-color:#334155;
+  color:#93C5FD;
+}
+[data-theme="dark"] .tile-5{
+  background:var(--brand);
+  border-color:var(--brand);
+  color:#fff;
+}
+
+/* Section label pills */
+[data-theme="dark"] .eyebrow{
+  background:var(--brand-soft);
+  color:#BFDBFE;
+}
+
+/* Testimonial cards keep their layout but go dark */
+[data-theme="dark"] .t-card{
+  background:#1E293B;
+  border-color:#334155;
+  box-shadow:0 6px 16px rgba(0,0,0,.4);
+}
+[data-theme="dark"] .t-message{color:var(--ink)}
+[data-theme="dark"] .dot{background:#475569}
+[data-theme="dark"] .dot.is-active{background:var(--brand)}
+
+/* Outline button text needs to stay readable */
+[data-theme="dark"] .btn-outline{
+  color:var(--ink);
+  border-color:var(--line-strong);
+}
+
+/* Focus rings can be dimmer brand color to be less jarring on dark */
+[data-theme="dark"] .search-input:focus,
+[data-theme="dark"] .input:focus{
+  border-color:var(--brand);
+  box-shadow:0 0 0 4px rgba(37,99,235,.25);
+}
+
+/* Filter pill select */
+[data-theme="dark"] .filter-pill__select{
+  background-color:#334155;
+  color:var(--ink);
+}
+[data-theme="dark"] .filter-pill__select:hover,
+[data-theme="dark"] .filter-pill__select:focus{
+  background-color:#475569;
 }
