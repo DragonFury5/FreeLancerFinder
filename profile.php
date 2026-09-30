@@ -26,12 +26,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isSelf) {
     }
 }
 
+// Save payout details (separate form)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isSelf && isset($_POST['payout_save'])) {
+    $pBank = strtoupper(trim($_POST['payout_bank'] ?? ''));
+    $pAcc  = trim($_POST['payout_account'] ?? '');
+    $pName = trim($_POST['payout_name'] ?? '');
+
+    try {
+        $stmt = $pdo->prepare(
+            "UPDATE lancers
+             SET payout_bank = ?, payout_account = ?, payout_name = ?
+             WHERE user_id = ?"
+        );
+        $stmt->execute([$pBank, $pAcc, $pName, (int)$me['id']]);
+        $payoutSaved = true;
+    } catch (Throwable $e) {
+        $errors['payout'] = t('profile.rate_error');
+    }
+}
+
+
 $stmt = $pdo->prepare(
         "SELECT u.id, u.name, u.email, u.role, u.created_at,
-            l.title, l.skill, l.bio, l.location, l.rate, l.rating, l.category
-     FROM users u
-     LEFT JOIN lancers l ON l.user_id = u.id
-     WHERE u.id = ?"
+        l.title, l.skill, l.bio, l.location, l.rate, l.rating, l.category,
+        l.payout_bank, l.payout_account, l.payout_name
+ FROM users u
+ LEFT JOIN lancers l ON l.user_id = u.id
+ WHERE u.id = ?"
 );
 $stmt->execute([$viewId]);
 $profile = $stmt->fetch();
@@ -162,6 +183,46 @@ require __DIR__ . '/includes/header.php';
           <?= e(t('profile.pay_btn')) ?>
         </a>
       </aside>
+
+          <?php if ($isSelf && $isLancer): ?>
+      <aside class="panel" style="grid-column:1 / -1">
+        <h2><?= e(t('wd.payout_title')) ?></h2>
+        <p class="hint" style="margin-bottom:16px"><?= e(t('wd.payout_hint')) ?></p>
+
+        <?php if (!empty($payoutSaved)): ?>
+          <div class="alert alert-success" style="margin-bottom:16px">
+            <?= e(t('wd.payout_saved')) ?>
+          </div>
+        <?php endif; ?>
+
+        <form method="post">
+          <input type="hidden" name="payout_save" value="1">
+
+          <div class="field-row">
+            <div class="field">
+              <label for="payout_bank"><?= e(t('wd.bank')) ?></label>
+              <input class="input" id="payout_bank" name="payout_bank"
+                     type="text" placeholder="<?= e(t('wd.bank_ph')) ?>"
+                     value="<?= e($profile['payout_bank'] ?? '') ?>">
+            </div>
+            <div class="field">
+              <label for="payout_account"><?= e(t('wd.account')) ?></label>
+              <input class="input" id="payout_account" name="payout_account"
+                     type="text" value="<?= e($profile['payout_account'] ?? '') ?>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="payout_name"><?= e(t('wd.account_name')) ?></label>
+            <input class="input" id="payout_name" name="payout_name"
+                   type="text" value="<?= e($profile['payout_name'] ?? '') ?>">
+          </div>
+
+          <button class="btn btn-primary" type="submit"><?= e(t('profile.rate_save')) ?></button>
+        </form>
+      </aside>
+    <?php endif; ?>
+
     <?php endif; ?>
 
       <?php if ($isSelf && $isLancer): ?>

@@ -2,39 +2,31 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/lang.php';
+require_once __DIR__ . '/payment/config.php';     
+require_once __DIR__ . '/includes/earnings.php';
 
 require_login();
 
 $me = current_user();
 if (($me['role'] ?? '') !== 'lancer') {
-    // Customers have no earnings — send them to browse.
     header('Location: browse.php');
     exit;
 }
 
 $lancerId = (int)$me['id'];
-
-/** Normalize any Tripay status into our 3 canonical states. */
-function earnings_status(string $raw): string {
-    $s = strtoupper(trim($raw));
-    if (in_array($s, ['PAID', 'SUCCESS', 'SETTLED'], true)) return 'PAID';
-    if ($s === 'REFUNDED') return 'REFUNDED';
-    return 'UNPAID';
-}
-
-function rp_local($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
+$balance  = compute_lancer_balance($pdo, $lancerId);
+$min      = (int)TRIPAY_DISBURSEMENT_MIN;
+$minFmt   = 'Rp ' . number_format($min, 0, ',', '.');
 
 // --- Filters ---
-$q    = trim($_GET['q']    ?? '');
-$flt  = trim($_GET['filter'] ?? '');       // '', 'paid', 'unpaid'
-$allowedFilters = ['', 'paid', 'unpaid'];
-if (!in_array($flt, $allowedFilters, true)) $flt = '';
+$q   = trim($_GET['q'] ?? '');
+$flt = trim($_GET['filter'] ?? '');
+if (!in_array($flt, ['', 'paid', 'unpaid'], true)) $flt = '';
 
-// --- Build query ---
+// --- Transactions query ---
 $sql    = "SELECT * FROM transactions WHERE lancer_id = ?";
 $params = [$lancerId];
-
-$where = [];
+$where  = [];
 
 if ($q !== '') {
     $like = '%' . $q . '%';
@@ -53,55 +45,75 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
 
-// --- Stats (always over the full pool for this Lancer) ---
-$statStmt = $pdo->prepare(
-    "SELECT
-        COUNT(*) AS n,
-        SUM(CASE WHEN UPPER(status) IN ('PAID','SUCCESS','SETTLED') THEN total ELSE 0 END) AS paid,
-        SUM(CASE WHEN UPPER(status) IN ('PAID','SUCCESS','SETTLED') THEN 0
-                 WHEN UPPER(status) = 'REFUNDED' THEN 0
-                 ELSE total END) AS pending,
-        SUM(CASE WHEN UPPER(status) <> 'REFUNDED' THEN total ELSE 0 END) AS total_all,
-        SUM(CASE WHEN UPPER(status) <> 'REFUNDED'
-                 AND YEAR(created_at) = YEAR(NOW())
-                 AND MONTH(created_at) = MONTH(NOW())
-                 THEN total ELSE 0 END) AS this_month
-     FROM transactions
-     WHERE lancer_id = ?"
+// --- Withdrawals history ---
+$wdStmt = $pdo->prepare(
+    "SELECT * FROM withdrawals WHERE lancer_id = ? ORDER BY requested_at DESC"
 );
-$statStmt->execute([$lancerId]);
-$stats = $statStmt->fetch() ?: [];
+$wdStmt->execute([$lancerId]);
+$withdrawals = $wdStmt->fetchAll();
+
+// --- Banners ---
+$bannerFailed = $_GET['withdraw_failed'] ?? '';
+$bannerSent   = !empty($_GET['withdrawn']);
 
 $pageTitle = t('earn.title') . ' — FLF';
 require __DIR__ . '/includes/header.php';
+
+function rp_local($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
 ?>
 
 <div class="container">
+
+  <?php if ($bannerSent): ?>
+    <div class="alert alert-success" style="margin-top:24px">
+      <?= e(t('earn.banner_sent')) ?>
+    </div>
+  <?php endif; ?>
+  <?php if ($bannerFailed !== ''): ?>
+    <div class="alert alert-error" style="margin-top:24px">
+      <?= e(t('earn.banner_failed', ['msg' => $bannerFailed])) ?>
+    </div>
+  <?php endif; ?>
 
   <div class="admin-head">
     <h1><?= e(t('earn.title')) ?></h1>
     <p><?= e(t('earn.sub')) ?></p>
   </div>
 
+  <!-- 4 stat cards -->
   <div class="earn-stats">
     <div class="earn-stat earn-stat--accent">
       <span class="earn-stat__label"><?= e(t('earn.stat_total')) ?></span>
-      <span class="earn-stat__value"><?= rp_local($stats['total_all'] ?? 0) ?></span>
+      <span class="earn-stat__value"><?= rp_local($balance['grand_total']) ?></span>
     </div>
     <div class="earn-stat earn-stat--money">
-      <span class="earn-stat__label"><?= e(t('earn.stat_paid')) ?></span>
-      <span class="earn-stat__value"><?= rp_local($stats['paid'] ?? 0) ?></span>
+      <span class="earn-stat__label"><?= e(t('earn.stat_available')) ?></span>
+      <span class="earn-stat__value"><?= rp_local($balance['available']) ?></span>
     </div>
     <div class="earn-stat earn-stat--pending">
-      <span class="earn-stat__label"><?= e(t('earn.stat_pending')) ?></span>
-      <span class="earn-stat__value"><?= rp_local($stats['pending'] ?? 0) ?></span>
+      <span class="earn-stat__label"><?= e(t('earn.stat_held')) ?></span>
+      <span class="earn-stat__value"><?= rp_local($balance['held']) ?></span>
     </div>
     <div class="earn-stat">
-      <span class="earn-stat__label"><?= e(t('earn.stat_month')) ?></span>
-      <span class="earn-stat__value"><?= rp_local($stats['this_month'] ?? 0) ?></span>
+      <span class="earn-stat__label"><?= e(t('earn.stat_withdrawn')) ?></span>
+      <span class="earn-stat__value"><?= rp_local($balance['withdrawn']) ?></span>
     </div>
   </div>
 
+  <!-- Withdraw CTA -->
+  <?php if ($balance['available'] >= $min): ?>
+    <div style="margin:24px 0 12px">
+      <a class="btn btn-primary btn-lg" href="withdraw.php">
+        <?= e(t('earn.withdraw_btn')) ?> → <?= rp_local($balance['available']) ?>
+      </a>
+    </div>
+  <?php else: ?>
+    <p class="result-meta" style="text-align:left;margin:20px 0 8px">
+      <?= e(t('earn.min_hint', ['min' => $minFmt])) ?>
+    </p>
+  <?php endif; ?>
+
+  <!-- Search + filter -->
   <form class="admin-search" method="get" action="earnings.php" role="search">
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="11" cy="11" r="7"/>
@@ -124,10 +136,7 @@ require __DIR__ . '/includes/header.php';
     ?>
     <?php foreach ($pills as [$key, $label]): ?>
       <?php
-        $qs = http_build_query(array_filter([
-          'q'      => $q,
-          'filter' => $key,
-        ], fn($v) => $v !== ''));
+        $qs = http_build_query(array_filter(['q'=>$q,'filter'=>$key], fn($v) => $v !== ''));
         $href = 'earnings.php' . ($qs ? '?' . $qs : '');
       ?>
       <a class="earn-pill <?= $flt === $key ? 'is-active' : '' ?>" href="<?= e($href) ?>">
@@ -140,7 +149,7 @@ require __DIR__ . '/includes/header.php';
     <?php if ($q !== '' || $flt !== ''): ?>
       <?php
         $pieces = [];
-        if ($q !== '')   $pieces[] = t('earn.results_for', ['count' => count($rows), 'q' => $q]);
+        if ($q !== '')   $pieces[] = t('earn.results_for', ['count'=>count($rows),'q'=>$q]);
         if ($flt !== '') $pieces[] = $flt === 'paid' ? t('earn.filter_paid') : t('earn.filter_unpaid');
         echo e(implode(' · ', $pieces));
       ?>
@@ -151,15 +160,12 @@ require __DIR__ . '/includes/header.php';
   </p>
 
   <?php if (!$rows): ?>
-
     <div class="admin-empty">
       <strong><?= e(t('earn.empty_t')) ?></strong>
       <p><?= e(t('earn.empty_s')) ?></p>
     </div>
-
   <?php else: ?>
 
-    <!-- Desktop table -->
     <div class="earn-table-wrap">
       <table class="earn-table">
         <thead>
@@ -172,34 +178,23 @@ require __DIR__ . '/includes/header.php';
         </thead>
         <tbody>
           <?php foreach ($rows as $t): ?>
-            <?php
-              $st  = earnings_status($t['status'] ?? '');
-              $cls = strtolower($st);
-            ?>
+            <?php $st = earnings_status($t['status'] ?? ''); $cls = strtolower($st); ?>
             <tr>
               <td><?= date('M j, Y H:i', strtotime($t['created_at'])) ?></td>
-              <td class="name">
-                <?= e($t['customer_name'] !== '' ? $t['customer_name'] : t('earn.guest')) ?>
-              </td>
+              <td class="name"><?= e($t['customer_name'] !== '' ? $t['customer_name'] : t('earn.guest')) ?></td>
               <td class="num"><strong><?= rp_local($t['total']) ?></strong></td>
-              <td>
-                <span class="earn-badge earn-badge--<?= $cls ?>">
-                  <?= e($st === 'PAID' ? t('earn.filter_paid') : ($st === 'REFUNDED' ? $st : t('earn.filter_unpaid'))) ?>
-                </span>
-              </td>
+              <td><span class="earn-badge earn-badge--<?= $cls ?>">
+                <?= e($st === 'PAID' ? t('earn.filter_paid') : ($st === 'REFUNDED' ? $st : t('earn.filter_unpaid'))) ?>
+              </span></td>
             </tr>
           <?php endforeach; ?>
         </tbody>
       </table>
     </div>
 
-    <!-- Mobile cards -->
     <div class="earn-cards">
       <?php foreach ($rows as $t): ?>
-        <?php
-          $st  = earnings_status($t['status'] ?? '');
-          $cls = strtolower($st);
-        ?>
+        <?php $st = earnings_status($t['status'] ?? ''); $cls = strtolower($st); ?>
         <div class="earn-card-item">
           <div class="earn-card-item__top">
             <span class="earn-card-item__name">
@@ -215,6 +210,53 @@ require __DIR__ . '/includes/header.php';
       <?php endforeach; ?>
     </div>
 
+  <?php endif; ?>
+
+  <!-- Withdrawals history -->
+  <h2 style="margin-top:16px"><?= e(t('earn.withdrawals')) ?></h2>
+
+  <?php if (!$withdrawals): ?>
+    <div class="admin-empty" style="margin-bottom:64px">
+      <p style="margin:0"><?= e(t('earn.wd_empty')) ?></p>
+    </div>
+  <?php else: ?>
+    <div class="earn-table-wrap">
+      <table class="earn-table">
+        <thead>
+          <tr>
+            <th><?= e(t('earn.wd_date')) ?></th>
+            <th class="num"><?= e(t('earn.wd_amount')) ?></th>
+            <th class="num"><?= e(t('earn.wd_fee')) ?></th>
+            <th><?= e(t('earn.wd_status')) ?></th>
+            <th><?= e(t('earn.wd_note')) ?></th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($withdrawals as $w): ?>
+            <?php
+              $map = ['SENT'=>'paid','PENDING'=>'unpaid','REJECTED'=>'refunded'];
+              $cls = $map[$w['status']] ?? 'unpaid';
+              $lbl = $w['status'] === 'SENT' ? t('earn.wd_sent')
+                   : ($w['status'] === 'REJECTED' ? t('earn.wd_rejected') : t('earn.wd_pending'));
+            ?>
+            <tr>
+              <td><?= date('M j, Y H:i', strtotime($w['requested_at'])) ?></td>
+              <td class="num"><strong><?= rp_local($w['amount']) ?></strong></td>
+              <td class="num">
+                <?= rp_local($w['fee']) ?>
+                <small style="color:var(--muted);font-size:.72rem">
+                  · <?= $w['flf_covers_fee'] ? 'FLF' : 'You' ?>
+                </small>
+              </td>
+              <td><span class="earn-badge earn-badge--<?= $cls ?>"><?= e($lbl) ?></span></td>
+              <td style="font-size:.82rem;color:var(--muted)">
+                <?= e($w['note'] ?: '—') ?>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
   <?php endif; ?>
 
 </div>

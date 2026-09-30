@@ -126,6 +126,7 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
             <th class="num">Donation</th>
             <th class="num">Total</th>
             <th>Status</th>
+            <th>Available</th>
             <th>Date</th>
           </tr>
         </thead>
@@ -139,7 +140,7 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
               <td class="num"><?= rp($t['amount']) ?></td>
               <td class="num"><?= $t['donation'] > 0 ? rp($t['donation']) : '—' ?></td>
               <td class="num"><strong><?= rp($t['total']) ?></strong></td>
-              <td>
+                          <td>
                 <button type="button"
                         class="status-toggle status-toggle--<?= strtolower($ds) ?>"
                         data-id="<?= (int)$t['id'] ?>"
@@ -149,6 +150,29 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
                   <?= $ds ?>
                 </button>
               </td>
+
+              <!-- NEW: Available column -->
+              <td>
+                <?php
+                  $avail  = $t['available_at'] ?? null;
+                  $isPaid = $ds === 'PAID';
+                ?>
+                <?php if (!$isPaid || !$avail): ?>
+                  <span style="color:var(--muted);font-size:.8rem">—</span>
+                <?php elseif (strtotime($avail) <= time()): ?>
+                  <span class="status-badge status-badge--paid">Released</span>
+                <?php else: ?>
+                  <button type="button"
+                          class="release-btn"
+                          data-id="<?= (int)$t['id'] ?>">
+                    Release now
+                  </button>
+                  <small style="display:block;color:var(--muted);font-size:.75rem;margin-top:4px">
+                    <?= date('M j H:i', strtotime($avail)) ?>
+                  </small>
+                <?php endif; ?>
+              </td>
+
               <td><?= date('M j, Y H:i', strtotime($t['created_at'])) ?></td>
             </tr>
           <?php endforeach; ?>
@@ -206,5 +230,42 @@ function rp($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
   });
 })();
 </script>
+
+
+<script>
+document.querySelectorAll('.release-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    if (btn.disabled) return;
+    if (!confirm('Release this transaction now? The Lancer will be able to withdraw it.')) return;
+    btn.disabled = true;
+    btn.textContent = 'Releasing…';
+
+    var body = new URLSearchParams({ id: btn.dataset.id });
+    fetch('release.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+      credentials: 'same-origin'
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data.ok) {
+        alert(data.error || 'Error');
+        btn.disabled = false;
+        btn.textContent = 'Release now';
+        return;
+      }
+      btn.parentElement.innerHTML = '<span class="status-badge status-badge--paid">Released</span>';
+    })
+    .catch(function () {
+      alert('Network error');
+      btn.disabled = false;
+      btn.textContent = 'Release now';
+    });
+  });
+});
+</script>
+
+
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

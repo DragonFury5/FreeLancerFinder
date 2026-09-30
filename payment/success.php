@@ -64,6 +64,21 @@ if ($txId > 0) {
     $stmt->execute([$txId]);
     $tx = $stmt->fetch();
 }
+// Sandbox: landing on success.php means the payment is confirmed.
+// Flip status → PAID and set the 3-day hold timer.
+if ($tx && !in_array(strtoupper($tx['status'] ?? ''), ['PAID','SUCCESS','SETTLED'], true)) {
+    try {
+        $upd = $pdo->prepare(
+            "UPDATE transactions
+             SET status = 'PAID',
+                 available_at = DATE_ADD(NOW(), INTERVAL 3 DAY)
+             WHERE id = ?"
+        );
+        $upd->execute([$txId]);
+        $tx['status'] = 'PAID';
+        $tx['available_at'] = date('Y-m-d H:i:s', strtotime('+3 days'));
+    } catch (Throwable $e) {}
+}
 
 $pageTitle = t('succ.title') . ' — FLF';
 require __DIR__ . '/../includes/header.php';

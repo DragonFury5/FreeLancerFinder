@@ -9,3 +9,8 @@ define('TRIPAY_BASE_URL', 'https://tripay.co.id/api-sandbox');
 // IMPORTANT: these now point to the FLF payment folder
 define('TRIPAY_RETURN_URL',   'http://localhost/flf/payment/return.php');
 define('TRIPAY_CALLBACK_URL', 'http://localhost/flf/payment/callback.php');
+
+// ===== Disbursement (payout) =====
+define('TRIPAY_DISBURSEMENT_ENABLED', true);   // set false to skip the real API call
+define('TRIPAY_DISBURSEMENT_FEE',     5000);
+define('TRIPAY_DISBURSEMENT_MIN',     50000);

@@ -1032,3 +1032,26 @@ html,body{transition:background-color .2s, color .2s}
   background:var(--surface);
   border-color:var(--line);
 }
+/* ---------- Withdraw page ---------- */
+.wd-form{
+  padding:24px;background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);
+}
+.wd-form h2{font-size:1.05rem}
+
+[data-theme="dark"] .wd-form{
+  background:var(--surface);border-color:var(--line);
+}
+
+/* Release button on admin */
+.release-btn{
+  padding:5px 12px;border:1px solid #F59E0B;background:#FEF3C7;
+  color:#92400E;border-radius:999px;font-size:.75rem;font-weight:700;
+  cursor:pointer;transition:background-color .15s,border-color .15s;
+}
+.release-btn:hover{background:#FDE68A;border-color:#D97706}
+.release-btn:disabled{opacity:.5;cursor:wait}
+
+[data-theme="dark"] .release-btn{
+  background:#422006;color:#FCD34D;border-color:#78350F;
+}
