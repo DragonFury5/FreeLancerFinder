@@ -124,9 +124,16 @@ require __DIR__ . '/includes/header.php';
           <?php if (!empty($l['bio'])): ?>
             <p class="lancer-bio"><?= e($l['bio']) ?></p>
           <?php endif; ?>
-          <div class="lancer-foot">
-            <span class="rate"><?= number_format((float)$l['rating'], 1) ?>
-              <small><?= e(t('browse.rating')) ?></small></span>
+                    <div class="lancer-foot">
+            <?php $avg = (float)$l['rating']; $full = (int) round(max(0, min(5, $avg))); ?>
+            <span class="rate" aria-label="<?= number_format($avg, 1) ?> / 5">
+              <?php for ($s = 1; $s <= 5; $s++): ?>
+                <svg class="card-star <?= $s <= $full ? 'is-on' : '' ?>"
+                     viewBox="0 0 24 24" aria-hidden="true">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/>
+                </svg>
+              <?php endfor; ?>
+            </span>
             <span class="loc"><?= e($l['location']) ?></span>
           </div>
         </a>

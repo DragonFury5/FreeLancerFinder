@@ -27,6 +27,7 @@ $pageTitle   = $pageTitle ?? 'Admin — FLF';
     <nav class="nav-links" aria-label="Admin">
       <a href="index.php"    class="<?= $currentPage === 'index.php'    ? 'is-active' : '' ?>">Actions</a>
       <a href="payments.php" class="<?= $currentPage === 'payments.php' ? 'is-active' : '' ?>">Payment</a>
+            <a href="receipts.php" class="<?= $currentPage === 'receipts.php' ? 'is-active' : '' ?>">Receipts</a>
     </nav>
 
     <div class="nav-actions">

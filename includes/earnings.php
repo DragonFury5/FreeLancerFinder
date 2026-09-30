@@ -57,3 +57,28 @@ function compute_lancer_balance(PDO $pdo, int $lancerId): array {
         'withdrawn'     => $withdrawn,
     ];
 }
+
+/** Generate a unique receipt ID like WD-2026-8A3F9C2K. */
+function generate_receipt_id(PDO $pdo): string {
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for ($try = 0; $try < 10; $try++) {
+        $rand = '';
+        for ($i = 0; $i < 8; $i++) {
+            $rand .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        $id = 'WD-' . date('Y') . '-' . $rand;
+
+        $chk = $pdo->prepare("SELECT 1 FROM withdrawals WHERE receipt_id = ?");
+        $chk->execute([$id]);
+        if (!$chk->fetchColumn()) return $id;
+    }
+    // Astronomically unlikely, but just in case
+    return 'WD-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(6)));
+}
+
+/** Mask an account number: 1234567890 → ****7890. */
+function mask_account(string $acc): string {
+    $acc = trim($acc);
+    if (strlen($acc) <= 4) return $acc;
+    return str_repeat('*', max(0, strlen($acc) - 4)) . substr($acc, -4);
+}

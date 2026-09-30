@@ -13,7 +13,7 @@ $errors  = [];
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isSelf) {
-    $newRate = (int)($_POST['rate'] ?? 0);
+        $newRate = (int)str_replace('.', '', $_POST['rate'] ?? '0');
     if ($newRate < 0)         $newRate = 0;
     if ($newRate > 100000000) $newRate = 100000000;
 
@@ -117,10 +117,12 @@ require __DIR__ . '/includes/header.php';
               <label for="rate" class="rate-edit__label"><?= e(t('profile.rate_label')) ?></label>
               <div class="rate-edit__row">
                 <span class="rate-edit__prefix">Rp</span>
-                <input type="number" id="rate" name="rate"
+                              <input type="text" id="rate" name="rate"
                        class="input rate-edit__input"
-                       value="<?= (int)$profile['rate'] ?>"
-                       min="0" step="1000" required>
+                       data-thousands
+                       inputmode="numeric"
+                       value="<?= number_format((int)$profile['rate'], 0, ',', '.') ?>"
+                       required>
                 <button class="btn btn-primary" type="submit">
                   <?= e(t('profile.rate_save')) ?>
                 </button>

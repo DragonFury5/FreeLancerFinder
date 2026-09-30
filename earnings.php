@@ -249,8 +249,18 @@ function rp_local($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
                 </small>
               </td>
               <td><span class="earn-badge earn-badge--<?= $cls ?>"><?= e($lbl) ?></span></td>
-              <td style="font-size:.82rem;color:var(--muted)">
-                <?= e($w['note'] ?: '—') ?>
+                           <td style="font-size:.82rem;color:var(--muted)">
+                <?php if (!empty($w['note'])): ?>
+                  <div style="margin-bottom:6px"><?= e($w['note']) ?></div>
+                <?php endif; ?>
+
+                <?php if ($w['status'] === 'SENT'): ?>
+                  <a class="btn btn-outline"
+                     style="padding:4px 12px;font-size:.78rem"
+                     href="receipt.php?id=<?= e(urlencode($w['receipt_id'])) ?>">
+                    View receipt
+                  </a>
+                <?php endif; ?>
               </td>
             </tr>
           <?php endforeach; ?>
@@ -261,4 +271,4 @@ function rp_local($n) { return 'Rp ' . number_format((float)$n, 0, ',', '.'); }
 
 </div>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php';?>

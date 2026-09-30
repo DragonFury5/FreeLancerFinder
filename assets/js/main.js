@@ -167,4 +167,24 @@
       try { localStorage.setItem('flf-theme', next); } catch (e) {}
     });
   });
+
+    /* ---------- Thousands-separator input mask ---------- */
+  function formatThousands(v) {
+    var n = String(v || '').replace(/\D/g, '');
+    if (n === '') return '';
+    return n.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  document.querySelectorAll('[data-thousands]').forEach(function (el) {
+    // Initial format (so PHP-injected values look right on load)
+    if (el.value) el.value = formatThousands(el.value);
+
+    el.addEventListener('input', function () {
+      var caretFromEnd = el.value.length - el.selectionStart;
+      el.value = formatThousands(el.value);
+      // Restore caret roughly in the right spot
+      var newPos = Math.max(0, el.value.length - caretFromEnd);
+      try { el.setSelectionRange(newPos, newPos); } catch (e) {}
+    });
+  });
 })();

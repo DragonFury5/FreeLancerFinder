@@ -128,8 +128,9 @@ require __DIR__ . '/../includes/header.php';
                  value="<?= e($me['name'] ?? t('pay.guest')) ?>" required>
         </div>
         <div class="field">
-          <label for="phone"><?= e(t('pay.phone')) ?></label>
-          <input class="input" id="phone" name="phone" type="text" value="08123456789">
+                  <input class="input" id="phone" name="phone"
+                 type="tel" inputmode="numeric" pattern="[0-9]+"
+                 value="08123456789">
         </div>
       </div>
 

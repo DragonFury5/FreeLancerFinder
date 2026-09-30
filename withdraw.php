@@ -30,25 +30,31 @@ $min = (int)TRIPAY_DISBURSEMENT_MIN;
 
 $errors = [];
 $old = [
-    'amount'         => '',
-    'flf_covers_fee' => 1,
-    'bank'           => $lancer['payout_bank'],
-    'account'        => $lancer['payout_account'],
-    'account_name'   => $lancer['payout_name'],
+    'amount'            => '',
+    'lancer_covers_fee' => 0,
+    'bank'              => $lancer['payout_bank'],
+    'account'           => $lancer['payout_account'],
+    'account_name'      => $lancer['payout_name'],
 ];
 
 // --- Handle POST ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $amount  = (int)($_POST['amount'] ?? 0);
-    $cover   = !empty($_POST['flf_covers_fee']) ? 1 : 0;
-    $bank    = strtoupper(trim($_POST['bank'] ?? ''));
-    $acc     = trim($_POST['account'] ?? '');
-    $accName = trim($_POST['account_name'] ?? '');
+    $amount       = (int)str_replace('.', '', $_POST['amount'] ?? '0');
+    $lancerCovers = !empty($_POST['lancer_covers_fee']) ? 1 : 0;
+    $flfCovers    = $lancerCovers ? 0 : 1;   // DB column: 1 = FLF pays, 0 = Lancer pays
+    $bank         = strtoupper(trim($_POST['bank'] ?? ''));
+    $acc          = trim($_POST['account'] ?? '');
+    $accName      = trim($_POST['account_name'] ?? '');
 
-    $old = ['amount'=>$amount,'flf_covers_fee'=>$cover,
-            'bank'=>$bank,'account'=>$acc,'account_name'=>$accName];
+    $old = [
+        'amount'            => $amount,
+        'lancer_covers_fee' => $lancerCovers,
+        'bank'              => $bank,
+        'account'           => $acc,
+        'account_name'      => $accName,
+    ];
 
-    $deduction = $amount + ($cover ? 0 : $fee);
+    $deduction = $amount + ($lancerCovers ? $fee : 0);
 
     if ($bank === '' || $acc === '' || $accName === '') {
         $errors['payout'] = t('wd.err_payout');
@@ -71,13 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $upd->execute([$bank, $acc, $accName, $lancerId]);
         }
 
-        // Insert withdrawal
+        // Insert withdrawal with a fresh receipt id
+        $receiptId = generate_receipt_id($pdo);
+
         $ins = $pdo->prepare(
             "INSERT INTO withdrawals
-             (lancer_id, amount, fee, flf_covers_fee, bank, account, account_name, status, note)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', '')"
+             (receipt_id, lancer_id, amount, fee, flf_covers_fee, bank, account, account_name, status, note)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', '')"
         );
-        $ins->execute([$lancerId, $amount, $fee, $cover, $bank, $acc, $accName]);
+        $ins->execute([$receiptId, $lancerId, $amount, $fee, $flfCovers, $bank, $acc, $accName]);
         $wid = (int)$pdo->lastInsertId();
 
         // Fire Tripay (or simulate)
@@ -91,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'bank'         => $bank,
                 'account'      => $acc,
                 'account_name' => $accName,
-                'note'         => 'FLF withdrawal #' . $wid,
+                'note'         => 'FLF withdrawal ' . $receiptId,
             ]);
             $apiRef = $result['merchant_ref'] ?? '';
             if (!empty($result['ok'])) {
@@ -100,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $apiErr = $result['error'] ?? 'Unknown error';
             }
         } else {
-            $apiOk = true;
+            $apiOk  = true;
             $apiRef = 'SIMULATED-' . $wid;
         }
 
@@ -111,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  WHERE id=?"
             );
             $upd->execute([$apiRef, $wid]);
-            header('Location: earnings.php?withdrawn=1');
+            header('Location: earnings.php?withdrawn=' . urlencode($receiptId));
             exit;
         } else {
             $upd = $pdo->prepare(
@@ -182,7 +190,8 @@ $feeFormatted = 'Rp ' . number_format($fee, 0, ',', '.');
           </div>
           <div class="field">
             <label for="account"><?= e(t('wd.account')) ?></label>
-            <input class="input" id="account" name="account" type="text"
+            <input class="input" id="account" name="account"
+                   type="tel" inputmode="numeric" pattern="[0-9]+"
                    value="<?= e($old['account']) ?>" required>
           </div>
         </div>
@@ -197,8 +206,8 @@ $feeFormatted = 'Rp ' . number_format($fee, 0, ',', '.');
 
         <div class="field">
           <label for="amount"><?= e(t('wd.amount_lbl')) ?></label>
-          <input class="input" id="amount" name="amount" type="number"
-                 min="<?= $min ?>" step="1000"
+          <input class="input" id="amount" name="amount" type="text"
+                 data-thousands inputmode="numeric"
                  value="<?= e((string)$old['amount']) ?>" required>
           <p class="hint"><?= e(t('wd.amount_hint', ['min' => $minFormatted])) ?></p>
           <?php if (!empty($errors['amount'])): ?>
@@ -207,9 +216,9 @@ $feeFormatted = 'Rp ' . number_format($fee, 0, ',', '.');
         </div>
 
         <div class="pay-donation">
-          <label class="pay-donation__toggle" for="flf_covers_fee">
-            <input type="checkbox" id="flf_covers_fee" name="flf_covers_fee" value="1"
-                   <?= !empty($old['flf_covers_fee']) ? 'checked' : '' ?>>
+          <label class="pay-donation__toggle" for="lancer_covers_fee">
+            <input type="checkbox" id="lancer_covers_fee" name="lancer_covers_fee" value="1"
+                   <?= !empty($old['lancer_covers_fee']) ? 'checked' : '' ?>>
             <span>
               <?= e(t('wd.cover_fee', ['fee' => $feeFormatted])) ?>
               <small><?= e(t('wd.cover_fee_s')) ?></small>
@@ -248,7 +257,7 @@ $feeFormatted = 'Rp ' . number_format($fee, 0, ',', '.');
 (function () {
   var fee    = <?= (int)$fee ?>;
   var amtEl  = document.getElementById('amount');
-  var cbEl   = document.getElementById('flf_covers_fee');
+  var cbEl   = document.getElementById('lancer_covers_fee');
   var recv   = document.getElementById('wdReceive');
   var feeEl  = document.getElementById('wdFee');
   var ded    = document.getElementById('wdDeducted');
@@ -257,13 +266,13 @@ $feeFormatted = 'Rp ' . number_format($fee, 0, ',', '.');
   function rp(n){ return 'Rp ' + (n || 0).toLocaleString(locale); }
 
   function calc() {
-    var a = parseInt(amtEl.value || '0', 10) || 0;
-    // Checked = Lancer covers fee → extra deduction
-    var covers = cbEl.checked;
+    var a = parseInt((amtEl.value || '0').replace(/\D/g, ''), 10) || 0;
+    var covers = cbEl.checked;   // checked = Lancer pays the fee
     var deduction = a + (covers ? fee : 0);
 
-    recv.textContent  = rp(a);
-    ded.textContent   = rp(deduction);
+    recv.textContent = rp(a);
+    ded.textContent  = rp(deduction);
+
     if (covers) {
       feeEl.textContent = rp(fee) + ' (<?= e(t('wd.fee_you')) ?>)';
     } else {
@@ -277,4 +286,4 @@ $feeFormatted = 'Rp ' . number_format($fee, 0, ',', '.');
 })();
 </script>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/includes/footer.php';
